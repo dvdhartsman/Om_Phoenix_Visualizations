@@ -12,20 +12,8 @@ import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 import streamlit as st
 
-# Sample Data
-df_sample = pd.read_csv("sample_data_formatted.csv")
-
-# Medical Practice Data
-df_med = pd.read_csv("Kaggle_medical_practice_20.csv", index_col=0)
-
-# Third Data
-df_ins = pd.read_csv("Insurance_claims_mendeleydata_6.csv")
-
 
 # Code to create the sample dataset with the same number of rows as we have in our modeling set
-
-# Code to create the dataset with the same number of rows as we have in our modeling set
-
 def preprocess_sample_dataset(df):
     """
     These are the preprocessing steps for sample_data_formatted.csv to be 
@@ -171,9 +159,6 @@ def preprocess_sample_dataset(df):
     return df
 
 
-# Process the data
-df_sample = preprocess_sample_dataset(df_sample)
-
 # Processing for insurance data
 def preprocess_insurance_data(data):
     """
@@ -207,9 +192,6 @@ def preprocess_insurance_data(data):
 
     return data
 
-
-# Process the Data
-df_ins = preprocess_insurance_data(df_ins)
 
 # Statewise Plots -------------------------------------------
 
@@ -577,13 +559,13 @@ def plotly_filtered_claims_bar(filtered_data, original_data):
 
 def main():
     # Sample Data
-    df_sample = pd.read_csv("../../../data/Preprocessed_datasets/sample_data_formatted.csv")
+    df_sample = pd.read_csv("sample_data_formatted.csv")
 
     # Medical Practice Data
-    df_med = pd.read_csv("../../../data/Preprocessed_datasets/Kaggle_medical_practice_20.csv", index_col=0)
+    df_med = pd.read_csv("Kaggle_medical_practice_20.csv", index_col=0)
 
     # Third Data
-    df_ins = pd.read_csv("../../../data/Preprocessed_datasets/Insurance_claims_mendeleydata_6.csv")
+    df_ins = pd.read_csv("Insurance_claims_mendeleydata_6.csv")
 
     # Process the sample data
     df_sample = preprocess_sample_dataset(df_sample)
@@ -591,11 +573,14 @@ def main():
     # Process the insurance Data
     df_ins = preprocess_insurance_data(df_ins)
 
-    data_source = st.selectbox("Choose Data", ["Sample Data", "Medical Practice", "Insurance Claims"])
+    st.header("Choose one of our 3 datasets")
+    data_source = st.selectbox("Choose Data", ["Car Accident Claims (Sample Data)", "Medical Malpractice", "Auto Insurance Claims"])
 
-    if data_source == "Sample Data":
+    if data_source == "Car Accident Claims (Sample Data)":
         data = df_sample
-        st.header("State-wise Data")
+        st.subheader("This dataset is comprised of car accident claims.")
+        st.markdown("---")
+        st.subheader("State-wise Data")
         st.plotly_chart(plotly_states(data))
         st.plotly_chart(plotly_box_states(data))
         st.header("Injury Type")
@@ -742,15 +727,19 @@ def main():
 
 
     # MEDICAL PRACTICE ------------------------------------------------------------------
-    elif data_source == "Medical Practice": 
+    elif data_source == "Medical Malpractice": 
         data = df_med
+        st.subheader("This dataset is comprised of medical malpractice claims.")
+        st.markdown("---")
         st.header("Gender Data")
         st.plotly_chart(plotly_gender(data))
         st.subheader("Gender and Insurance Types")
         st.plotly_chart(plotly_box_gender(data))
     
-    elif data_source == "Insurance Claims":
+    elif data_source == "Auto Insurance Claims":
         data = df_ins
+        st.subheader("This dataset is comprised of car accident claims.")
+        st.markdown("---")
         st.subheader("State-wise Data")
         st.plotly_chart(plotly_states(data))
         st.plotly_chart(plotly_box_states(data))
