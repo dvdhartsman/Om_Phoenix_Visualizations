@@ -157,6 +157,15 @@ def preprocess_sample_dataset(df):
     df["accident_type"] = df["accident_type"].str.replace("It involved multiple cars", "Multi Car")
     df["accident_type"] = df["accident_type"].fillna("Unknown")
     
+    # dropping this subset because it would impede our ability to filter data at the end
+    df = df.dropna(subset="age")
+
+    # Remove <0 values from "claim_amount" only impacts values of -2
+    df.loc[df["claim_amount"] < 0, "claim_amount"] = 0
+
+    # drop cities
+    df = df.drop(columns=["city", "other_injury", "serious_injury", "potential_tbi"])
+
     return df
 
 
@@ -522,10 +531,17 @@ def plotly_age_bracket(data):
     return fig
 
 
+def plotly_scatter_age(data, group=None):
+    fig = px.scatter(data, x="age", y="claim_amount", log_y=False, range_y=[0, data["claim_amount"].max()],
+                     title="Claim Value vs Age (Zoom to Inspect, Click Legend to Activate/Deactivate Groups)", color=group, symbol=group)
+    fig.update_layout(xaxis={"title":"Age"}, yaxis={"title":"Claim Value"})
+
+    return fig
+
 # ----------------- Plots for Filtered Data
 
-def plotly_filtered_claims(data):
-    fig = px.histogram(data["claim_amount"], labels={"claim_amount":"Claim Value USD"}, title="Number of Claims by Claim Value - Filtered Data", 
+def plotly_filtered_claims(data, condition):
+    fig = px.histogram(data["claim_amount"], labels={"claim_amount":"Claim Value USD"}, title=f"Number of Claims by Claim Value - {condition}", 
                   color_discrete_sequence=["blue"], nbins=20)
     fig.update_layout(legend_title="", xaxis={"title":"Claim Value"}, yaxis={"title":"Number of Claims"})
     fig.update_traces(name="Claims", marker_line_color='black', marker_line_width=1.5)
@@ -533,28 +549,49 @@ def plotly_filtered_claims(data):
     return fig
 
 # Boxplot for injuries
-def plotly_boxplot_filtered(data):
+def plotly_boxplot_filtered(data, condition):
     fig_b = px.box(data, x="claim_amount", labels={"claim_amount":"Claim"})
-    fig_b.update_layout(title=f"Boxplot of Claim Distribution for Filter Set")
+    fig_b.update_layout(title=f"Boxplot of Claim Distribution for {condition}")
 
     return fig_b
 
 
 
 # Define the function plotly_filtered_claims
-def plotly_filtered_claims_bar(filtered_data, original_data):
+def plotly_filtered_claims_bar(filtered_data, excluded_data, original_data):
     filtered_med = filtered_data["claim_amount"].median()
     filtered_mean = filtered_data["claim_amount"].mean()
+    
+    excluded_med = excluded_data["claim_amount"].median()
+    excluded_mean = excluded_data["claim_amount"].mean()
+
     original_med = original_data["claim_amount"].median()
     original_mean =  original_data["claim_amount"].mean()
-    fig1 = px.bar(x=["Filtered Median Claim", "Original Median Claim"," ", "Filtered Mean Claim", "Original Mean Claim"], y=[filtered_med, original_med, 0, filtered_mean, original_mean], color=["Filtered Median Claim", "Original Median Claim","",  "Filtered Mean Claim", "Original Mean Claim"], color_discrete_sequence=["lightblue", "red","red", "lightblue", "red"],
-                 labels={"red":"Filtered Median"})
+    fig1 = px.bar(x=["Selected Data", "Excluded Data", "All Data"," ", "Selected Mean Claim", "Excluded Mean Claim", "All Data Mean Claim"], 
+                  y=[filtered_med, excluded_med, original_med, 0, filtered_mean, excluded_mean, original_mean], 
+                  color=["Selected Median Claim", "Excluded Median Claim", "Original Median Claim","",  "Selected Mean Claim","Excluded Mean Claim", "Original Mean Claim"], 
+                  color_discrete_sequence=["lightgreen", "red","blue", "red", "lightgreen", "red", "blue"],
+                labels={"red":"Filtered Median"})
+    
     # fig1.add_trace(
-    fig1.update_layout(showlegend=True, title="Comparison of Mean and Median for Filtered and Original Data", 
+    fig1.update_layout(showlegend=True, title="Comparison of Mean and Median Values", 
                        xaxis={"title":"Data/Statistic"}, yaxis={"title":"Claim Amount USD"})
     fig1.update_layout(legend_title="Dataset/Statistic")
     
     return fig1
+
+
+def plotly_filtered_claims_bar(data):
+    fig = px.bar(
+    data[data["Statistic"].isin(["Average Value", "Median Value"])],
+    x = "Statistic", y=["Selected Data", "Excluded Data", "All Data"],
+    barmode="group", template="plotly_dark",
+    title="Comparison of Average and Median Claim Values")
+
+    fig.update_layout(legend_title="Dataset", yaxis={"title":"Claim Value USD"}, bargap=.35)                      
+    fig.update_traces(hovertemplate="Claim Amount %{y}<br> Statistic: %{x}<br>")
+
+    return fig
     
 # ----- main function ------------------------------------------------------------------
 
@@ -605,7 +642,7 @@ def main():
         st.subheader("Boxplot")
         st.plotly_chart(plotly_boxplot_injury(inj_data))
 
-
+        # ----------------- AGE ----------------
         # Histogram
         st.subheader("Age:")
         st.plotly_chart(plotly_age_hist(data))
@@ -613,6 +650,15 @@ def main():
         # Line plot of Age Value Counts - Like a Histogram
         st.plotly_chart(plotly_age_counts(data))
         
+        # Scatterplot of Claim vs Age
+        keys = [None] + list(data.select_dtypes(object).columns.str.title().str.replace("_", " "))
+        values = [None] + list(data.select_dtypes(object).columns)
+        age_col_dict = dict(zip(keys, values))
+
+        group = st.selectbox("Add Detail for Subsets:", keys)
+        st.plotly_chart(plotly_scatter_age(data, age_col_dict[group]))
+        
+
         # Line Plot of Median Claims by Age
         st.plotly_chart(plotly_age(data))
 
@@ -702,29 +748,71 @@ def main():
 
         st.markdown("---")
         st.write("Here's a brief summary of claims for the filters you have selected:")
-        description_table = pd.DataFrame(data[all_conditions]["claim_amount"].describe()).reset_index()\
-                                  .merge(pd.DataFrame(data["claim_amount"].describe()).reset_index().rename(columns={"claim_amount":"Original Data Claim Amount"}).round(2)).reset_index().rename(
-                       columns={"claim_amount":"Filtered Data Claim Amount",
-                               "index":"Statistic"}).drop(columns="level_0")
+        
+        # DF for comparison of numeric profiles
+        description_table = pd.DataFrame(data[all_conditions]["claim_amount"].describe().round(2)).reset_index()\
+                                .merge(pd.DataFrame(data[~all_conditions]["claim_amount"].describe()).reset_index()\
+                                .rename(columns={"claim_amount":"Excluded Data"})\
+                                .round(2)).reset_index()\
+                                .rename(columns={
+                                    "claim_amount":"Selected Data",
+                                    "index":"Statistic"}).drop(columns="level_0")
+        
+        # DF of all rows description
+        describe_df = pd.DataFrame()
+        describe_df["Statistic"] = description_table["Statistic"].copy()
+        describe_df["All Data"] = data["claim_amount"].describe().values.round(2)
+
+        # Merge 3rd df
+        description_table = description_table.merge(describe_df, on="Statistic")
+
+        # Mapping the statistic values
         description_table["Statistic"] = description_table["Statistic"].map({"count":"Number of Rows",
-                   "mean":"Average Claim Value",
+                   "mean":"Average Value",
                    "std":"Standard Deviation",
-                   "min":"Minimum Claim Value",
-                   "25%":"25th Percentile Claim Value",
-                   "50%":"Median Claim Value",
-                   "75%":"75th Percentile Claim Value",
-                   "max":"Maximum Claim Value"})
+                   "min":"Minimum Value",
+                   "25%":"25th Percentile Value",
+                   "50%":"Median Value",
+                   "75%":"75th Percentile Value",
+                   "max":"Maximum Value"})
+        
+        description_table.drop(2, inplace=True)
+        description_table = description_table.iloc[[0,2,3,4,1,5,6], :]
+
+        # Sample size warning
+        if data[all_conditions].shape[0] <= 10:
+            st.write("This is a small subset of data, so use discretion when interpretting the results.")
+
+        # Display the dataframe
         st.dataframe(description_table, use_container_width=True, hide_index=True)
 
-        # Histogram
-        st.plotly_chart(plotly_filtered_claims(data[all_conditions]))
+        # Only display distribution plots if there are 10 or more observations
+        if data[all_conditions].shape[0] >= 10:
+            distribution_skew_condition = (data[all_conditions]["claim_amount"].max() - data[all_conditions]["claim_amount"].quantile(.9)) >\
+            (data[all_conditions]["claim_amount"].quantile(.9) - data[all_conditions]["claim_amount"].quantile(.75))
+            
+            # Account for extreme outliers
+            if distribution_skew_condition:
+                hist_data = data[all_conditions][data[all_conditions]["claim_amount"]\
+                                                  < data[all_conditions]["claim_amount"].quantile(.9)]
+            
+                condition = "Selected Data without Extreme Outliers"
+                # Histogram
+                st.plotly_chart(plotly_filtered_claims(hist_data, condition))
+                # Boxplot
+                st.plotly_chart(plotly_boxplot_filtered(hist_data, condition))
 
-        # Boxplot
-        st.plotly_chart(plotly_boxplot_filtered(data[all_conditions]))
+            
+            else: # If not distribution_skew_condition
+                condition = "Selected Data"
+                st.plotly_chart(plotly_filtered_claims(data[all_conditions], condition))
+                # Boxplot
+                st.plotly_chart(plotly_boxplot_filtered(data[all_conditions], condition))
 
         # Comparison Bar Plot
-        filtered_df = data[all_conditions]
-        st.plotly_chart(plotly_filtered_claims_bar(filtered_df, data))
+        # st.plotly_chart(plotly_filtered_claims_bar(data[all_conditions],data[~all_conditions], data))
+        st.plotly_chart(plotly_filtered_claims_bar(description_table))
+        
 
 
     # MEDICAL PRACTICE ------------------------------------------------------------------
