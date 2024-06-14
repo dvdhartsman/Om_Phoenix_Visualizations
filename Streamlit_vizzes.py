@@ -13,13 +13,13 @@ from plotly.subplots import make_subplots
 import streamlit as st
 
 # Sample Data
-df_sample = pd.read_csv("../../../data/Preprocessed_datasets/sample_data_formatted.csv")
+df_sample = pd.read_csv("sample_data_formatted.csv")
 
 # Medical Practice Data
-df_med = pd.read_csv("../../../data/Preprocessed_datasets/Kaggle_medical_practice_20.csv", index_col=0)
+df_med = pd.read_csv("Kaggle_medical_practice_20.csv", index_col=0)
 
 # Third Data
-df_ins = pd.read_csv("../../../data/Preprocessed_datasets/Insurance_claims_mendeleydata_6.csv")
+df_ins = pd.read_csv("Insurance_claims_mendeleydata_6.csv")
 
 
 # Code to create the sample dataset with the same number of rows as we have in our modeling set
