@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 import streamlit as st
+import scipy
 
 
 # Code to create the sample dataset with the same number of rows as we have in our modeling set
