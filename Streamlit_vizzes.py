@@ -254,10 +254,10 @@ def plotly_states(data):
     fig.update_layout(legend_title='')
 
     # Customizing hover info
-    fig.update_traces(hovertemplate='State: %{x}<br>Value: %{y:.2f}')
+    fig.update_traces(hovertemplate='State: %{x}<br>Value: %{y:$,.2f}')
 
     fig.for_each_trace(lambda t: t.update(name=t.name.capitalize()))
-
+    fig.update_layout(yaxis=dict(tickformat='$,.2f'))
     # Returning the Plotly figure
     return fig
 
@@ -358,11 +358,12 @@ def plotly_gender(data):
     male_data = data.query("gender == 'Male'")['claim_amount']
     female_data = data.query("gender == 'Female'")['claim_amount']
 
-    male_median_x = male_data.median()
-    female_median_x = female_data.median()
+    male_median_x = male_data.median().round(2)
+    female_median_x = female_data.median().round(2)  
 
-    # KDEs
+    # KDEs fig.update_layout(yaxis=dict(tickformat='$,.2f'))
     male_kde = ff.create_distplot([male_data], group_labels=['Male'], show_hist=False, show_rug=False)
+    
     female_kde = ff.create_distplot([female_data], group_labels=['Female'], show_hist=False, show_rug=False)
 
     # Create subplots
@@ -371,12 +372,15 @@ def plotly_gender(data):
                         specs=[[{"type": "scatter"}, {"type": "scatter"}], [{"colspan": 2}, None]],
                         row_heights=[0.5, 0.5],
                         column_widths=[0.5, 0.5])
+    
 
     # Male KDE Plot
     for trace in male_kde['data']:
         trace["hoverinfo"] = 'x'
+        trace["xhoverformat"] = "$,.2f"
         trace["showlegend"] = False
         fig.add_trace(trace, row=1, col=1)
+        
 
     male_median_y = male_kde['data'][0]['y'].max()
     
@@ -390,6 +394,7 @@ def plotly_gender(data):
     # Female KDE Plot
     for trace in female_kde['data']:
         trace["hoverinfo"] = 'x'
+        trace["xhoverformat"] = "$,.2f"
         trace["showlegend"] = False
         fig.add_trace(trace, row=1, col=2)
 
@@ -405,12 +410,12 @@ def plotly_gender(data):
     # Overlaid KDE Plot
     fig.add_trace(go.Scatter(x=male_kde['data'][0]['x'], y=male_kde['data'][0]['y'], 
                              mode='lines', name='Male', fill='tozeroy', line=dict(color='blue'), opacity=0.1,
-                             hoverinfo='x'), 
+                             hoverinfo='x', xhoverformat="$,.2f"), 
                   row=2, col=1)
 
     fig.add_trace(go.Scatter(x=female_kde['data'][0]['x'], y=female_kde['data'][0]['y'], 
                              mode='lines', name='Female', fill='tozeroy', line=dict(color='lightcoral'), opacity=0.1,
-                             hoverinfo='x'), 
+                             hoverinfo='x', xhoverformat="$,.2f"), 
                   row=2, col=1)
 
     # Update layout
@@ -424,7 +429,7 @@ def plotly_gender(data):
 
     # Show plot
     return fig
-
+# fig.update_layout(yaxis=dict(tickformat='$,.2f'))
 
 def plotly_box_gender(data):
     """
@@ -468,15 +473,16 @@ def plotly_box_gender(data):
 
 
     # Plot for different types of injuries from the Sample Data
-def plotly_injury_bar(data):
+def plotly_injury_bar(data, group, **kwargs):
     """
-    Compatible with Sample Dataset
+    Compatible with Sample Dataset, inverts x and y 
     """
-    grouped = data.groupby("Type of Injury")["claim_amount"].agg(["mean", "median"]).round(2).reset_index().sort_values(by="median", ascending=True).rename(columns={"mean":"Mean", "median":"Median"})
-    fig = px.bar(grouped, y='Type of Injury', x=['Median', 'Mean'],
-             labels={'value': "Claim Value", 'Type of Injury': 'Injury', "variable":"Statistic"},
-             title='Mean and Median Claims by Injury', barmode='group', color_continuous_scale="Viridis")
+    grouped =  data.groupby(group)["claim_amount"].agg(["mean", "median"]).round(2).reset_index().sort_values(by="median", ascending=True).rename(columns={"mean":"Mean", "median":"Median"})
+    fig = px.bar(data_frame = grouped, y=group, x=['Median', 'Mean'],
+             labels={'value': "Claim Value", group:group.replace("_", " ").title(), "variable":"Statistic"},
+             title='Mean and Median Claims by Injury', barmode='group', **kwargs)
     fig.update_layout(showlegend=True, width=1200, height=675)
+    fig.update_layout(xaxis=dict(tickformat='$,.2f'))
 
     return fig
 
@@ -509,12 +515,12 @@ def plotly_age(data):
                   labels={"median":"Median Claim", "age":"Age"}, title="Median Claim Value by Age")
     fig.update_traces(name="Median Claim Value", showlegend=True)
     fig.update_layout(legend_title="")
+    fig.update_layout(yaxis=dict(tickformat='$,.2f'))
     
     return fig
 
-def plotly_age_hist(data):
-    fig = px.histogram(data["age"], labels={"age":"Age"}, title="Total # of Claims by Age", 
-                  color_discrete_sequence=["orange"])
+def plotly_age_hist(data, **kwargs):
+    fig = px.histogram(data_frame=data["age"], labels={"age":"Age"}, title="Total # of Claims by Age", **kwargs)
     fig.update_layout(legend_title="", xaxis={"title":"Age"}, yaxis={"title":"Number of Claims"})
     fig.update_traces(name="Claims")
     fig.update_traces(name="Claims", marker_line_color='black', marker_line_width=1.5)
@@ -541,6 +547,7 @@ def plotly_age_bracket(data, **kwargs):
 
     fig.update_layout(legend_title_text="Statistic")
     fig.update_traces(hovertemplate="Claim Amount: %{x} <br>Group: %{y}")
+    fig.update_layout(yaxis=dict(tickformat='$,.2f'))
     
     return fig
 
@@ -552,12 +559,15 @@ def plotly_scatter_age(data, group=None):
     fig.update_layout(xaxis={"title":"Age"}, yaxis={"title":"Claim Value"},
                       legend_title=f"{leg_title}")
     fig.update_layout(scattermode="group", scattergap=.75)
+    fig.update_layout(yaxis=dict(tickformat='$,.2f'))
 
     return fig
 
 
 def plotly_pie(data, column, **kwargs):
-    fig = px.pie(data_frame=data, names=column, hole=.5, title=f"Proportions of {column.replace('_', ' ').title()}", **kwargs)
+    fig = px.pie(data_frame=data, names=column, hole=.5, 
+                 title=f"Proportions Observed in the Data: {column.replace('_', ' ').title()}", 
+                 labels={column:column.replace('_', ' ').title()}, **kwargs)
     fig.update_layout(legend_title_text = f"{column.replace('_', ' ').title()}")
     # fig.update_traces(hovertemplate=f"Claim Amount %{y}<br> Statistic: %{x}<br>")
     return fig
@@ -576,6 +586,7 @@ def plotly_mean_median_bar(data, group, **kwargs): # KWARGS --------
              title=f'Mean and Median Claims by {group.replace("_", " ").title()}', barmode='group', 
              color_continuous_scale="Viridis", **kwargs)  # KWARGS!!!!!!!!!!
     fig.update_layout(showlegend=True, width=1200, height=675)
+    fig.update_layout(yaxis=dict(tickformat='$,.2f'))
 
     return fig
 
@@ -583,30 +594,32 @@ def plotly_mean_median_bar(data, group, **kwargs): # KWARGS --------
 # ----------------- Plots for Filtered Data
 
 def plotly_filtered_claims(data, condition):
-    fig = px.histogram(data["claim_amount"], labels={"claim_amount":"Claim Value USD"}, title=f"Number of Claims by Claim Value - {condition}", 
+    fig = px.histogram(data["claim_amount"], labels={"claim_amount":"Claim Value USD"}, title=f"Claim Distribution by Value - {condition}", 
                   color_discrete_sequence=["blue"], nbins=20)
     fig.update_layout(legend_title="", xaxis={"title":"Claim Value"}, yaxis={"title":"Number of Claims"})
     fig.update_traces(name="Claims", marker_line_color='black', marker_line_width=1.5)
+    fig.update_layout(xaxis=dict(tickformat='$,.2f'))
     
     return fig
 
-# Boxplot for injuries
+# Boxplot for filtered data
 def plotly_boxplot_filtered(data, condition):
-    fig_b = px.box(data, x="claim_amount", labels={"claim_amount":"Claim"})
+    fig_b = px.box(data, x="claim_amount", labels={"claim_amount":"Claim"}, color_discrete_sequence=["salmon"])
     fig_b.update_layout(title=f"Boxplot of Claim Distribution for {condition}")
+    fig_b.update_layout(xaxis=dict(tickformat='$,.2f'))
 
     return fig_b
 
 
-def plotly_filtered_claims_bar(data):
-    fig = px.bar(
-    data[data["Statistic"].isin(["Average Value", "Median Value"])],
+def plotly_filtered_claims_bar(data, **kwargs):
+    fig = px.bar(data_frame = data[data["Statistic"].isin(["Average Value", "Median Value"])],
     x = "Statistic", y=["Selected Data", "Excluded Data", "All Data"],
-    barmode="group", template="plotly_dark",
-    title="Comparison of Average and Median Claim Values")
+    barmode="group",
+    title="Comparison of Average and Median Claim Values", **kwargs)
 
     fig.update_layout(legend_title="Dataset", yaxis={"title":"Claim Value USD"}, bargap=.35)                      
     fig.update_traces(hovertemplate="Claim Amount %{y}<br> Statistic: %{x}<br>")
+    fig.update_layout(yaxis=dict(tickformat='$,.2f'))
 
     return fig
     
@@ -619,18 +632,33 @@ def main():
     # Medical Practice Data
     df_med = pd.read_csv("Kaggle_medical_practice_20.csv", index_col=0)
 
-    # Basic Processing
+    # Medical Data Basic Processing ----------------------------------------------------
+    # Attorney
     df_med["private_attorney"] = df_med["private_attorney"].map({0:"No", 1:"Yes"})
+    
+    # Claim amount
     df_med.rename(columns={"total_claim_amount":"claim_amount"}, inplace=True)
+    
+    # Marital Status
     df_med["marital_status"] = df_med["marital_status"].map({0:"Divorced", 1:"Single", 2:"Married", 3:"Widowed",4:"Unknown"})
+    
+    # Age Bins
     bins = [-np.inf, 2, 12, 18, 35, 60, np.inf]
     labels = ["Infant 0-2", "Child 2-12", "Teenager 12-18", "Young Adult 18-35",
           "Adult 35-60", "Senior Citizen 60+"]
     
     df_med["age_bracket"] = pd.cut(df_med["age"], bins=bins, labels=labels)
 
+    # Severity ints to string categories
+    severity_mapping = {
+            1: 'Emotional Trauma', 2: 'Low', 3: 'Moderate', 4: 'Moderately High',
+            5: 'High', 6: 'Very High', 7: 'Severe', 8: 'Very Severe', 9: 'Death'
+        }
+        # Create severity category column
+    df_med['severity_category'] = df_med['severity'].map(severity_mapping)
 
-    # Third Data
+
+    # Car Insurance Data
     df_ins = pd.read_csv("Insurance_claims_mendeleydata_6.csv")
 
     # Process the sample data
@@ -639,270 +667,357 @@ def main():
     # Process the insurance Data
     df_ins = preprocess_insurance_data(df_ins)
 
-    st.header("Choose one of our 3 datasets")
-    data_source = st.selectbox("Choose Data", ["Car Accident Claims (Sample Data)", "Medical Malpractice", "Auto Insurance Claims"])
+    st.header("Choose one of our 2 datasets for analysis")
+    data_source = st.selectbox("Choose Data", ["Medical Malpractice", "Auto Insurance Claims"])
+
+    # "Car Accident Claims (Sample Data)" removed from our analysis due to not being used for modeling
 
     
     # ----------------------------------------- First Data -------------------------------------------------
     
-    if data_source == "Car Accident Claims (Sample Data)":
-        data = df_sample
+    # if data_source == "Car Accident Claims (Sample Data)":
+    #     data = df_sample
         
-        st.subheader("This dataset is comprised of car accident claims.")
-        st.markdown("---")
-        st.subheader("State-wise Data")
+    #     st.subheader("This dataset is comprised of car accident claims.")
+    #     st.markdown("---")
+    #     st.subheader("State-wise Data")
         
-        # Pie Chart
-        st.plotly_chart(plotly_pie(data, "state"))
+    #     # Pie Chart
+    #     st.plotly_chart(plotly_pie(data, "state"))
         
-        # Barplot
-        st.plotly_chart(plotly_states(data))
+    #     # Barplot
+    #     st.plotly_chart(plotly_states(data))
         
-        # Boxplot
-        st.plotly_chart(plotly_box_states(data))
+    #     # Boxplot
+    #     st.plotly_chart(plotly_box_states(data))
         
-        # INJURY
-        st.header("Injury Type")
+    #     # INJURY
+    #     st.header("Injury Type")
 
-        # Bar Chart of Injury Types
-        st.plotly_chart(plotly_injury_bar(data))
+    #     # Bar Chart of Injury Types
+    #     st.plotly_chart(plotly_injury_bar(data, "Type of Injury"))
 
-        # Option to pursue individual injuries
-        injury = st.selectbox("Choose an Injury to See the Distribution", data["Type of Injury"].unique())
-        inj_data = data.loc[(data["Type of Injury"] == injury) & (data["claim_amount"] < data["claim_amount"].quantile(.95))]
+    #     # Option to pursue individual injuries
+    #     injury = st.selectbox("Choose an Injury to See the Distribution", data["Type of Injury"].unique())
+    #     inj_data = data.loc[(data["Type of Injury"] == injury) & (data["claim_amount"] < data["claim_amount"].quantile(.95))]
         
 
-        # Injury Type Plots for Sample Data
-        st.header("Distributions of Claims by Injury")
+    #     # Injury Type Plots for Sample Data
+    #     st.header("Distributions of Claims by Injury")
 
-        # Histogram
-        st.subheader("Histogram")
-        st.plotly_chart(plotly_injury_hist(inj_data))
+    #     # Histogram
+    #     st.subheader("Histogram")
+    #     st.plotly_chart(plotly_injury_hist(inj_data))
 
-        # Boxplot
-        st.subheader("Boxplot")
-        st.plotly_chart(plotly_boxplot_injury(inj_data))
+    #     # Boxplot
+    #     st.subheader("Boxplot")
+    #     st.plotly_chart(plotly_boxplot_injury(inj_data))
 
-        # ----------------- AGE ----------------
+    #     # ----------------- AGE ----------------
     
-        st.subheader("Age:")        
-        # Line plot of Age Value Counts - Like a Histogram
-        # st.plotly_chart(plotly_age_counts(data))
+    #     st.subheader("Age:")        
+    #     # Line plot of Age Value Counts - Like a Histogram
+    #     # st.plotly_chart(plotly_age_counts(data))
 
-        # Histogram
-        st.plotly_chart(plotly_age_hist(data))
+    #     # Histogram
+    #     st.plotly_chart(plotly_age_hist(data))
 
 
-        # Line Plot of Median Claims by Age
-        st.plotly_chart(plotly_age(data))
+    #     # Line Plot of Median Claims by Age
+    #     st.plotly_chart(plotly_age(data))
 
-        # Mean and Median Barplots
-        st.plotly_chart(plotly_age_bracket(data))
+    #     # Mean and Median Barplots
+    #     st.plotly_chart(plotly_age_bracket(data))
 
-        # Scatterplot of Claim vs Age
-        st.subheader("Claims vs Age")
-        st.write("Select Groups from the Dropdown Menu to Compare Information")
-        keys = [None] + list(data.select_dtypes(exclude=np.number).columns.str.title().sort_values().str.replace("_", " "))
-        values = [None] + sorted(list(data.select_dtypes(exclude=np.number).columns), key=lambda x: x.lower())
-        age_col_dict = dict(zip(keys, values))
+    #     # Scatterplot of Claim vs Age
+    #     st.subheader("Claims vs Age")
+    #     st.write("Select Groups from the Dropdown Menu to Compare Information")
+    #     keys = [None] + list(data.select_dtypes(exclude=np.number).columns.str.title().sort_values().str.replace("_", " "))
+    #     values = [None] + sorted(list(data.select_dtypes(exclude=np.number).columns), key=lambda x: x.lower())
+    #     age_col_dict = dict(zip(keys, values))
 
-        group = st.selectbox("Choose Detail to Analyze Sub-groups:", keys)
-        st.plotly_chart(plotly_scatter_age(data, age_col_dict[group]))
+    #     group = st.selectbox("Choose Detail to Analyze Sub-groups:", keys)
+    #     st.plotly_chart(plotly_scatter_age(data, age_col_dict[group]))
 
-        # ______________ MARIAM'S CODE -------------------------------------
-        st.subheader("Post-Accident Actions (Mariam's Content)")
+    #     # ______________ MARIAM'S CODE -------------------------------------
+    #     st.subheader("Post-Accident Actions (Mariam's Content)")
         
-        st.plotly_chart(plotly_pie(data, "airbag_deployed", template="presentation"))
-        # Airbag
-        st.plotly_chart(plotly_mean_median_bar(data, "airbag_deployed", color_discrete_sequence=["lightblue", "blue"]))
+    #     st.plotly_chart(plotly_pie(data, "airbag_deployed", template="presentation"))
+    #     # Airbag
+    #     st.plotly_chart(plotly_mean_median_bar(data, "airbag_deployed", color_discrete_sequence=["lightblue", "blue"]))
 
-        # Called 911
-        st.plotly_chart(plotly_mean_median_bar(data, "called_911", color_discrete_sequence=["lightgreen", "green"]))
+    #     # Called 911
+    #     st.plotly_chart(plotly_mean_median_bar(data, "called_911", color_discrete_sequence=["lightgreen", "green"]))
 
 
 
-        #------------------------------------- Multi-filterable Plot for Sample Dataset ----------------------------
-        st.header("Try Out Multiple Filters:")
-        st.write('If you would like to deactivate a filter select: "None"')
+    #     #------------------------------------- Multi-filterable Plot for Sample Dataset ----------------------------
+    #     st.header("Try Out Multiple Filters:")
+    #     st.write('If you would like to deactivate a filter select: "None"')
         
-        # Age -------
-        min_age, max_age = st.slider("Age Range", min_value = data["age"].min().astype(int), max_value=data["age"].max().astype(int), \
-                        value=(data["age"].min().astype(int), data["age"].max().astype(int)), step=1)
+    #     # Age -------
+    #     min_age, max_age = st.slider("Age Range", min_value = data["age"].min().astype(int), max_value=data["age"].max().astype(int), \
+    #                     value=(data["age"].min().astype(int), data["age"].max().astype(int)), step=1)
         
-        # Boolean Mask for the Filter
-        age_condition = (data["age"] >= min_age) & (data["age"] <= max_age)
+    #     # Boolean Mask for the Filter
+    #     age_condition = (data["age"] >= min_age) & (data["age"] <= max_age)
         
 
-        # Accident Type ----------------------
-        accident_type_status = st.selectbox("Type of Accident:", [None] + list(data["accident_type"].unique()),index=0)
-        if accident_type_status:
-            accident_type_condition = (data["accident_type"] == accident_type_status)
-        else:
-            accident_type_condition = True
-
-        
-        # Airbag Deployed? -------------------
-        airbag_status = st.selectbox("Airbag Deployment:", 
-                                   [None] + list(data["airbag_deployed"].unique()),index=0)
-        if airbag_status:
-            airbag_condition = (data["airbag_deployed"] == airbag_status)
-        else:
-            airbag_condition = True
-
-
-        # Truck or Bus Involved -----------------------------
-        truck_involved_status = st.selectbox("Truck or Bus Involved?:", [None] + list(data["truck_bus_involved"].dropna().unique()),index=0)
-        if truck_involved_status:
-            truck_involved_condition = (data["truck_bus_involved"] == truck_involved_status)
-        else:
-            truck_involved_condition = True
-
-        # Taxi Involved -----------------------------
-        taxi_involved_status = st.selectbox("Taxi Involved?:", [None] + list(data["taxi_involved"].dropna().unique()),index=0)
-        if taxi_involved_status:
-            taxi_involved_condition = (data["taxi_involved"] == taxi_involved_status)
-        else:
-            taxi_involved_condition = True
-
-        # Called 911 After -----------------------------
-        called911_status = st.selectbox("Did You Call 911?:", [None] + list(data["called_911"].dropna().unique()),index=0)
-        if called911_status:
-            called911_condition = (data["called_911"] == called911_status)
-        else:
-            called911_condition = True
+    #     # Accident Type ----------------------
+    #     accident_type_status = st.selectbox("Type of Accident:", [None] + list(data["accident_type"].unique()),index=0)
+    #     if accident_type_status:
+    #         accident_type_condition = (data["accident_type"] == accident_type_status)
+    #     else:
+    #         accident_type_condition = True
 
         
-        # Type of Injury -----------
-        injury_type = st.selectbox("Type of Injury:", 
-                                   [None] + list(data["Type of Injury"].unique()),index=0)
+    #     # Airbag Deployed? -------------------
+    #     airbag_status = st.selectbox("Airbag Deployment:", 
+    #                                [None] + list(data["airbag_deployed"].unique()),index=0)
+    #     if airbag_status:
+    #         airbag_condition = (data["airbag_deployed"] == airbag_status)
+    #     else:
+    #         airbag_condition = True
 
-        if injury_type:
-            injury_condition = (data["Type of Injury"] == injury_type)
-        else:
-            injury_condition = True
+
+    #     # Truck or Bus Involved -----------------------------
+    #     truck_involved_status = st.selectbox("Truck or Bus Involved?:", [None] + list(data["truck_bus_involved"].dropna().unique()),index=0)
+    #     if truck_involved_status:
+    #         truck_involved_condition = (data["truck_bus_involved"] == truck_involved_status)
+    #     else:
+    #         truck_involved_condition = True
+
+    #     # Taxi Involved -----------------------------
+    #     taxi_involved_status = st.selectbox("Taxi Involved?:", [None] + list(data["taxi_involved"].dropna().unique()),index=0)
+    #     if taxi_involved_status:
+    #         taxi_involved_condition = (data["taxi_involved"] == taxi_involved_status)
+    #     else:
+    #         taxi_involved_condition = True
+
+    #     # Called 911 After -----------------------------
+    #     called911_status = st.selectbox("Did You Call 911?:", [None] + list(data["called_911"].dropna().unique()),index=0)
+    #     if called911_status:
+    #         called911_condition = (data["called_911"] == called911_status)
+    #     else:
+    #         called911_condition = True
+
+        
+    #     # Type of Injury -----------
+    #     injury_type = st.selectbox("Type of Injury:", 
+    #                                [None] + list(data["Type of Injury"].unique()),index=0)
+
+    #     if injury_type:
+    #         injury_condition = (data["Type of Injury"] == injury_type)
+    #     else:
+    #         injury_condition = True
             
         
-        # positive_mri_finding -----------------------------
-        mri_status = st.selectbox("MRI Positive?:", [None] + list(data["positive_mri_finding"].dropna().unique()),index=0)
-        if mri_status:
-            mri_condition = (data["positive_mri_finding"] == mri_status)
-        else:
-            mri_condition = True
+    #     # positive_mri_finding -----------------------------
+    #     mri_status = st.selectbox("MRI Positive?:", [None] + list(data["positive_mri_finding"].dropna().unique()),index=0)
+    #     if mri_status:
+    #         mri_condition = (data["positive_mri_finding"] == mri_status)
+    #     else:
+    #         mri_condition = True
 
 
-        # surgery_injection_recom -----------------------------
-        surgery_status = st.selectbox("Surgery or Injections Recommended?:", [None] + list(data["surgery_injection_recom"].dropna().unique()),index=0)
-        if surgery_status:
-            surgery_condition = (data["surgery_injection_recom"] == surgery_status)
-        else:
-            surgery_condition = True
+    #     # surgery_injection_recom -----------------------------
+    #     surgery_status = st.selectbox("Surgery or Injections Recommended?:", [None] + list(data["surgery_injection_recom"].dropna().unique()),index=0)
+    #     if surgery_status:
+    #         surgery_condition = (data["surgery_injection_recom"] == surgery_status)
+    #     else:
+    #         surgery_condition = True
 
         
-        #------------ Apply all of the filters --------------------
-        all_conditions = age_condition & injury_condition & airbag_condition & accident_type_condition\
-              & truck_involved_condition & taxi_involved_condition & called911_condition & mri_condition\
-                  & surgery_condition
+    #     #------------ Apply all of the filters --------------------
+    #     all_conditions = age_condition & injury_condition & airbag_condition & accident_type_condition\
+    #           & truck_involved_condition & taxi_involved_condition & called911_condition & mri_condition\
+    #               & surgery_condition
 
-        st.markdown("---")
-        st.write("Here's a brief summary of claims for the filters you have selected:")
+    #     st.markdown("---")
+    #     st.write("Here's a brief summary of claims for the filters you have selected:")
         
-        # DF for comparison of numeric profiles
-        description_table = pd.DataFrame(data[all_conditions]["claim_amount"].describe().round(2)).reset_index()\
-                                .merge(pd.DataFrame(data[~all_conditions]["claim_amount"].describe()).reset_index()\
-                                .rename(columns={"claim_amount":"Excluded Data"})\
-                                .round(2)).reset_index()\
-                                .rename(columns={
-                                    "claim_amount":"Selected Data",
-                                    "index":"Statistic"}).drop(columns="level_0")
+    #     # DF for comparison of numeric profiles
+    #     description_table = pd.DataFrame(data[all_conditions]["claim_amount"].describe().round(2)).reset_index()\
+    #                             .merge(pd.DataFrame(data[~all_conditions]["claim_amount"].describe()).reset_index()\
+    #                             .rename(columns={"claim_amount":"Excluded Data"})\
+    #                             .round(2)).reset_index()\
+    #                             .rename(columns={
+    #                                 "claim_amount":"Selected Data",
+    #                                 "index":"Statistic"}).drop(columns="level_0")
         
-        # DF of all rows description
-        describe_df = pd.DataFrame()
-        describe_df["Statistic"] = description_table["Statistic"].copy()
-        describe_df["All Data"] = data["claim_amount"].describe().values.round(2)
+    #     # DF of all rows description
+    #     describe_df = pd.DataFrame()
+    #     describe_df["Statistic"] = description_table["Statistic"].copy()
+    #     describe_df["All Data"] = data["claim_amount"].describe().values.round(2)
 
-        # Merge 3rd df
-        description_table = description_table.merge(describe_df, on="Statistic")
+    #     # Merge 3rd df
+    #     description_table = description_table.merge(describe_df, on="Statistic")
 
-        # Mapping the statistic values
-        description_table["Statistic"] = description_table["Statistic"].map({"count":"Number of Rows",
-                   "mean":"Average Value",
-                   "std":"Standard Deviation",
-                   "min":"Minimum Value",
-                   "25%":"25th Percentile Value",
-                   "50%":"Median Value",
-                   "75%":"75th Percentile Value",
-                   "max":"Maximum Value"})
+    #     # Mapping the statistic values
+    #     description_table["Statistic"] = description_table["Statistic"].map({"count":"Number of Rows",
+    #                "mean":"Average Value",
+    #                "std":"Standard Deviation",
+    #                "min":"Minimum Value",
+    #                "25%":"25th Percentile Value",
+    #                "50%":"Median Value",
+    #                "75%":"75th Percentile Value",
+    #                "max":"Maximum Value"})
         
-        description_table.drop(2, inplace=True)
-        description_table = description_table.iloc[[0,2,3,4,1,5,6], :]
+    #     description_table.drop(2, inplace=True)
+    #     description_table = description_table.iloc[[0,2,3,4,1,5,6], :]
 
-        # Sample size warning
-        if data[all_conditions].shape[0] <= 10:
-            st.write("This is a small subset of data, so use discretion when interpretting the results.")
+    #     # Sample size warning
+    #     if data[all_conditions].shape[0] <= 10:
+    #         st.write("This is a small subset of data, so use discretion when interpretting the results.")
 
-        # Display the dataframe
-        st.dataframe(description_table, use_container_width=True, hide_index=True)
+    #     # Display the dataframe
+    #     st.dataframe(description_table, use_container_width=True, hide_index=True)
 
-        # Only display distribution plots if there are 10 or more observations
-        if data[all_conditions].shape[0] >= 10:
-            distribution_skew_condition = (data[all_conditions]["claim_amount"].max() - data[all_conditions]["claim_amount"].quantile(.9)) >\
-            (data[all_conditions]["claim_amount"].quantile(.9) - data[all_conditions]["claim_amount"].quantile(.75))
+    #     # Only display distribution plots if there are 10 or more observations
+    #     if data[all_conditions].shape[0] >= 10:
+    #         distribution_skew_condition = (data[all_conditions]["claim_amount"].max() - data[all_conditions]["claim_amount"].quantile(.9)) >\
+    #         (data[all_conditions]["claim_amount"].quantile(.9) - data[all_conditions]["claim_amount"].quantile(.75))
             
-            # Account for extreme outliers
-            if distribution_skew_condition:
-                hist_data = data[all_conditions][data[all_conditions]["claim_amount"]\
-                                                  < data[all_conditions]["claim_amount"].quantile(.9)]
+    #         # Account for extreme outliers
+    #         if distribution_skew_condition:
+    #             hist_data = data[all_conditions][data[all_conditions]["claim_amount"]\
+    #                                               < data[all_conditions]["claim_amount"].quantile(.9)]
             
-                condition = "Selected Data without Extreme Outliers"
-                # Histogram
-                st.plotly_chart(plotly_filtered_claims(hist_data, condition))
-                # Boxplot
-                st.plotly_chart(plotly_boxplot_filtered(hist_data, condition))
+    #             condition = "Selected Data without Extreme Outliers"
+    #             # Histogram
+    #             st.plotly_chart(plotly_filtered_claims(hist_data, condition))
+    #             # Boxplot
+    #             st.plotly_chart(plotly_boxplot_filtered(hist_data, condition))
 
             
-            else: # If not distribution_skew_condition
-                condition = "Selected Data"
-                st.plotly_chart(plotly_filtered_claims(data[all_conditions], condition))
-                # Boxplot
-                st.plotly_chart(plotly_boxplot_filtered(data[all_conditions], condition))
+    #         else: # If not distribution_skew_condition
+    #             condition = "Selected Data"
+    #             st.plotly_chart(plotly_filtered_claims(data[all_conditions], condition))
+    #             # Boxplot
+    #             st.plotly_chart(plotly_boxplot_filtered(data[all_conditions], condition))
 
-        # Comparison Bar Plot
-        st.plotly_chart(plotly_filtered_claims_bar(description_table))
+    #     # Comparison Bar Plot
+    #     st.plotly_chart(plotly_filtered_claims_bar(description_table))
         
 
     # -------------------------------------------------------------------------------------------------------------
     # ------------------------- MEDICAL PRACTICE ------------------------------------------------------------------
-    elif data_source == "Medical Malpractice": 
+    if data_source == "Medical Malpractice": 
         data = df_med
         st.subheader("This dataset is comprised of medical malpractice claims.")
         st.markdown("---")
-        st.header("Gender Data")
+        st.subheader("1. Gender:")
         st.plotly_chart(plotly_gender(data))
-        st.subheader("Gender and Insurance Types")
-        st.plotly_chart(plotly_box_gender(data))
+        
+        # st.subheader("Gender and Insurance Types")
+        # st.plotly_chart(plotly_box_gender(data))
+        st.plotly_chart(px.bar(data_frame= data.groupby(["gender", "insurance"])["claim_amount"]\
+                               .agg("mean").round(2).reset_index(), x="insurance", y="claim_amount", color="gender", 
+                               barmode="group", title="Average Male and Female Claim Value for Different Insurance Types",
+                               color_discrete_sequence=["lightcoral","blue"]).update_layout(yaxis=dict(tickformat='$,.2f')))
+        
+        bins = [-np.inf, 200_000, 250_000, 300_000, 350_000, 400_000, 450_000, 500_000,
+                                       550_000, 600_000, 650_000, 700_000, 750_000, 800_000, 850_000, 900_000, np.inf]
+        len(bins)
+
+        labels = ["<$200k", "$200-250k", "$250-300k", "$300-350k", "$350-400k", "$400-450k", "$450-500k", "$500-550k", "$550-600k",
+                "$600-650k", "$650-700k", "$700-750k", "$750-800k", "$800-850k", "$850-900k", ">$900k"]
+
+        len(labels)
+
+        # Create New Feature for Claim Brackets
+        data["claim_category"] = pd.cut(data["claim_amount"], bins=bins, labels=labels)
+
+
+        st.plotly_chart(plotly_pie(data, "gender", color_discrete_sequence=["lightcoral","blue"]))
+        
+        
+        st.plotly_chart(px.line(data_frame = data.groupby("claim_category")["gender"].value_counts(normalize=True).multiply(100)\
+                                .round(2).reset_index(),x="claim_category", y="proportion", color="gender", 
+                                color_discrete_sequence=["lightcoral","blue"], labels={"gender":"Gender", 
+                                                                                       "proportion":"Percentage",
+                                                                                       "claim_category":"Value Range"},
+                                title="Men Represent a Larger Proportion of Large-Amount Claims Than Women", markers=True)\
+                                .update_layout(yaxis=dict(tickprefix='%')))
 
         # Age ------------------
+        st.subheader("2. Age:")
         # Line Plot of Median Claims by Age
-        st.plotly_chart(plotly_age(data))
+        # st.plotly_chart(plotly_age(data))
 
-        st.plotly_chart(plotly_age_hist(data))
+        st.plotly_chart(plotly_age_hist(data, color_discrete_sequence=["darkorange"]))
 
         # Mean and Median Age Barplots
-        st.plotly_chart(plotly_age_bracket(data, template="seaborn"))
+        st.plotly_chart(plotly_age_bracket(data, color_discrete_sequence=["darkorange", "maroon"]))
 
         # ------------------------ MARIAM's CODE ----------------------------------------
+        st.subheader("3. Attorney Involvement:")
         # Attorney
-        st.plotly_chart(plotly_mean_median_bar(data,"private_attorney", color_discrete_sequence=["darkorange","sienna"]))
+        st.plotly_chart(plotly_mean_median_bar(data,"private_attorney", color_discrete_sequence=["red","blue"]))
 
+        st.subheader("4. Marital Status:")
         # Marital Status
         st.plotly_chart(plotly_mean_median_bar(data, "marital_status", template="presentation"))
 
         # Severity
-        st.plotly_chart(plotly_mean_median_bar(data, "severity"))
+        # st.plotly_chart(plotly_mean_median_bar(data, "severity"))
 
+        # ------------------------ Indrajith's Code --------------------------------------------------
+
+        # Severity Analysis
+        # Mapping severity levels to categories
+        st.subheader("5. Severity:")
+        severity_points = """
+                    - We will fill this later, i need inputs from dataset team <br>
+                    """
+        st.markdown(
+            f"""
+                <style>
+                .text-area-wrapper {{
+                    background-color: rgba(128, 128, 128, 0.3); /* Grey with 30% opacity */
+                    padding: 10px;
+                    border-radius: 5px;
+                }}
+                </style>
+                <div class="text-area-wrapper" ">{severity_points}</div>
+                """,
+            unsafe_allow_html=True
+        )
+
+        # Define the order of severity categories
+        severity_order = ['Emotional Trauma', 'Low', 'Moderate', 'Moderately High',
+                          'High', 'Very High', 'Severe', 'Very Severe', 'Death']
+
+        # Figure Creation
+        severity_avg_claim = data.groupby('severity_category')[
+            'claim_amount'].mean().round(2).reset_index()
+
+        fig_severity_claim = px.bar(severity_avg_claim, x='severity_category', y='claim_amount',
+                                    labels={'x': 'Severity Category', 'y': 'Average Claim Amount',
+                                             "claim_amount":"Claim Amount", "severity_category":"Severity"},
+                                    title='Average Claim Amount by Severity Category',
+                                    color='claim_amount', color_continuous_scale='blues')
+
+
+        fig_severity_claim.update_layout(xaxis={'categoryorder': 'array', 'categoryarray': severity_order},
+                                         xaxis_title="Severity Category", yaxis_title="Average Claim amount in USD")
+        
+        fig_severity_claim.update_layout(legend_title="Claim Amount")
+        
+        # Traces for template
+        fig_severity_claim.update_traces(hovertemplate="Claim Amount %{y}<br> Severity: %{x}<br>")
+        
+        # Layout for format
+        fig_severity_claim.update_layout(yaxis=dict(tickformat='$,.2f'))
+        # show the plot
+        # fig_severity_claim.update_traces(dict(hovertemplate={'y'}, yhoverformat="$,.2f"))
+        st.plotly_chart(fig_severity_claim)
+
+
+        st.subheader("6. Medical Specialty:")
         # Medical Specialty ### VERY IMPORTANT!!!!!!!!! #############
         st.plotly_chart(plotly_mean_median_bar(data, "specialty", template="seaborn"))
-
+# .update_layout(yaxis=dict(tickformat='$,.2f')
 
         # ---------------------------------- FILTERS -----------------------------------------------
         st.header("Try Out Multiple Filters:")
@@ -963,7 +1078,7 @@ def main():
         & specialty_type_condition & insurance_type_condition & gender_type_condition
 
         st.markdown("---")
-        st.write("Here's a brief summary of claims for the filters you have selected:")
+        st.write("Here's a brief summary of claims for the data you have selected:")
         
         ### SUMMARY PLOTS
         # DF for comparison of numeric profiles
@@ -1027,7 +1142,7 @@ def main():
                 st.plotly_chart(plotly_boxplot_filtered(data[all_conditions], condition))
 
         # Comparison Bar Plot
-        st.plotly_chart(plotly_filtered_claims_bar(description_table))
+        st.plotly_chart(plotly_filtered_claims_bar(description_table, template="plotly_dark"))
 
         # Scatterplot of Claim vs Age
         keys = [None] + list(data.select_dtypes(exclude=np.number).columns.str.title().sort_values().str.replace("_", " "))
@@ -1045,45 +1160,74 @@ def main():
         st.subheader("This dataset is comprised of car accident claims.")
         st.write("These claims were all recorded between January 1, 2015 and March 1, 2015")
         st.markdown("---")
-        st.subheader("State-wise Data")
-        st.plotly_chart(plotly_states(data))
-        st.plotly_chart(plotly_box_states(data))
-        st.subheader("Gender Data")
+        
+        # Gender
+        st.subheader("1. Gender:")
         st.write('"Gender" refers to the policy holder (liable party) for this dataset')
         st.plotly_chart(plotly_gender(data))
+        
+        # age_bracket
+        st.subheader("2. Age:")
+        st.plotly_chart(plotly_age_bracket(data, color_discrete_sequence=["darkorange", "maroon"]))
+
+        # Make of Car -> probably not that important
+        st.subheader("3. Auto Manufacturer:")
+
+        # Treemap
+        fig = px.treemap(data[["auto_make", "auto_model"]].value_counts(normalize=True).reset_index(), 
+                         path=["auto_make", "auto_model"], values="proportion", title="Distribution of Makes and Models")
+        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+        st.plotly_chart(fig)
+        
+        # Barplot
+        st.plotly_chart(plotly_injury_bar(data, "auto_make", color_discrete_sequence=["blueviolet", "burlywood"]))
+
+        # auto_year -> CURIOUS DATA, implies older cars are of a higher claim value
+        st.subheader("4. Model year:")
+        st.plotly_chart(plotly_mean_median_bar(data,"auto_year"))
+
+        # # auto_make  -> probably not that important
+        # st.plotly_chart(plotly_mean_median_bar(data, "auto_make"))
+        # st.plotly_chart(plotly_mean_median_bar(data,"auto_model"))
+
+        # States
+        st.subheader("5. State:")
+        st.plotly_chart(plotly_pie(data, "state", template="plotly"))
+        st.plotly_chart(plotly_states(data))
+        # st.plotly_chart(plotly_box_states(data)) # Removed to avoid over complication
 
         # Incident Date showed a relatively stationary time series, not a lot of inferential value
         
         # accident_type
+        st.subheader("6. Accident Type:")
+        st.write("Any car collision seems to have similar compensation, whereas unattended vehicle claims are worth less...")
+        st.plotly_chart(plotly_pie(data, "accident_type", template="plotly"))
         st.plotly_chart(plotly_mean_median_bar(data, "accident_type"))
 
         # collision_type
-        st.plotly_chart(plotly_mean_median_bar(data, "collision_type"))
+        st.subheader("7. Collision Type:")
+        st.plotly_chart(plotly_pie(data, "collision_type", template="ggplot2"))
+        st.plotly_chart(plotly_mean_median_bar(data, "collision_type", color_discrete_sequence=["purple", "lightgrey"]))
 
         # incident_severity
-        st.plotly_chart(plotly_mean_median_bar(data, "incident_severity"))
+        st.subheader("8. Incident Severity:")
+        st.plotly_chart(plotly_pie(data, "incident_severity", template="presentation"))
+        st.plotly_chart(plotly_mean_median_bar(data, "incident_severity", color_discrete_sequence=["darkkhaki", "crimson"]))
 
-        # authorities_contacted
-        st.plotly_chart(plotly_mean_median_bar(data, "authorities_contacted"))
 
         # bodily_injuries
-        st.plotly_chart(plotly_mean_median_bar(data, "bodily_injuries"))
+        st.subheader("9. Number of Bodily Injuries:")
+        st.plotly_chart(plotly_pie(data, "bodily_injuries", template="ggplot2"))
+        st.plotly_chart(plotly_mean_median_bar(data, "bodily_injuries", color_discrete_sequence=["chocolate", "gray"]))
+
+        # authorities_contacted
+        st.subheader("10. Authorities Contacted:")
+        st.plotly_chart(plotly_pie(data, "authorities_contacted", template="presentation"))
+        st.plotly_chart(plotly_mean_median_bar(data, "authorities_contacted", color_discrete_sequence=["white", "darkred"]))
 
         # police_report_available
-        st.plotly_chart(plotly_mean_median_bar(data, "police_report_available"))
-
-        # auto_make
-        st.plotly_chart(plotly_mean_median_bar(data, "auto_make"))
-
-        # auto_model
-        st.plotly_chart(plotly_mean_median_bar(data,"auto_model"))
-
-        # auto_year -> CURIOUS DATA, implies older cars are of a higher initial value
-        st.plotly_chart(plotly_mean_median_bar(data,"auto_year"))
-
-        # age_bracket
-        st.plotly_chart(plotly_mean_median_bar(data,"age_bracket", template="seaborn"))
-        st.write(data["age_bracket"].value_counts().reset_index(), "FWIW")
+        st.subheader("11. Police Report:")
+        st.plotly_chart(plotly_mean_median_bar(data, "police_report_available", color_discrete_sequence=["blue", "lightgrey"]))
 
         # --------------------------------- Filtering Conditions -------------------------------------------
 
@@ -1204,7 +1348,7 @@ def main():
 
         st.markdown("---") 
 
-        st.write("Here's a brief summary of claims for the filters you have selected:")
+        st.subheader("Here's a breakdown of the data you have selected:")
         
         ### SUMMARY PLOTS
         # DF for comparison of numeric profiles
