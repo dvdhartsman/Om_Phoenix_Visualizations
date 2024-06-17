@@ -551,12 +551,20 @@ def plotly_scatter_age(data, group=None):
     leg_title = group.replace('_', ' ').title() if group is not None else group
     fig.update_layout(xaxis={"title":"Age"}, yaxis={"title":"Claim Value"},
                       legend_title=f"{leg_title}")
+    fig.update_layout(scattermode="group", scattergap=.75)
 
     return fig
 
 
+def plotly_pie(data, column, **kwargs):
+    fig = px.pie(data_frame=data, names=column, hole=.5, title=f"Proportions of {column.replace('_', ' ').title()}", **kwargs)
+    fig.update_layout(legend_title_text = f"{column.replace('_', ' ').title()}")
+    # fig.update_traces(hovertemplate=f"Claim Amount %{y}<br> Statistic: %{x}<br>")
+    return fig
+
+
 # ----------------------- Mariam Functions -------------------------------
-def plotly_mean_median_bar(data, group, **kwargs):
+def plotly_mean_median_bar(data, group, **kwargs): # KWARGS --------
     """
     Compatible with Most Datasets 
     """
@@ -566,10 +574,11 @@ def plotly_mean_median_bar(data, group, **kwargs):
     fig = px.bar(data_frame=grouped, x=group, y=['Median', 'Mean'],
              labels={'value': "Claim Value", group:group.replace("_", " ").title(), "variable":"Statistic"},
              title=f'Mean and Median Claims by {group.replace("_", " ").title()}', barmode='group', 
-             color_continuous_scale="Viridis", **kwargs)
+             color_continuous_scale="Viridis", **kwargs)  # KWARGS!!!!!!!!!!
     fig.update_layout(showlegend=True, width=1200, height=675)
 
     return fig
+
 
 # ----------------- Plots for Filtered Data
 
@@ -642,8 +651,17 @@ def main():
         st.subheader("This dataset is comprised of car accident claims.")
         st.markdown("---")
         st.subheader("State-wise Data")
+        
+        # Pie Chart
+        st.plotly_chart(plotly_pie(data, "state"))
+        
+        # Barplot
         st.plotly_chart(plotly_states(data))
+        
+        # Boxplot
         st.plotly_chart(plotly_box_states(data))
+        
+        # INJURY
         st.header("Injury Type")
 
         # Bar Chart of Injury Types
@@ -666,21 +684,14 @@ def main():
         st.plotly_chart(plotly_boxplot_injury(inj_data))
 
         # ----------------- AGE ----------------
-        # Histogram
-        st.subheader("Age:")
-        st.plotly_chart(plotly_age_hist(data))
-        
+    
+        st.subheader("Age:")        
         # Line plot of Age Value Counts - Like a Histogram
-        st.plotly_chart(plotly_age_counts(data))
-        
-        # Scatterplot of Claim vs Age
-        keys = [None] + list(data.select_dtypes(exclude=np.number).columns.str.title().sort_values().str.replace("_", " "))
-        values = [None] + sorted(list(data.select_dtypes(exclude=np.number).columns), key=lambda x: x.lower())
-        age_col_dict = dict(zip(keys, values))
+        # st.plotly_chart(plotly_age_counts(data))
 
-        group = st.selectbox("Add Detail for Subsets:", keys)
-        st.plotly_chart(plotly_scatter_age(data, age_col_dict[group]))
-        
+        # Histogram
+        st.plotly_chart(plotly_age_hist(data))
+
 
         # Line Plot of Median Claims by Age
         st.plotly_chart(plotly_age(data))
@@ -688,14 +699,25 @@ def main():
         # Mean and Median Barplots
         st.plotly_chart(plotly_age_bracket(data))
 
+        # Scatterplot of Claim vs Age
+        st.subheader("Claims vs Age")
+        st.write("Select Groups from the Dropdown Menu to Compare Information")
+        keys = [None] + list(data.select_dtypes(exclude=np.number).columns.str.title().sort_values().str.replace("_", " "))
+        values = [None] + sorted(list(data.select_dtypes(exclude=np.number).columns), key=lambda x: x.lower())
+        age_col_dict = dict(zip(keys, values))
+
+        group = st.selectbox("Choose Detail to Analyze Sub-groups:", keys)
+        st.plotly_chart(plotly_scatter_age(data, age_col_dict[group]))
+
         # ______________ MARIAM'S CODE -------------------------------------
         st.subheader("Post-Accident Actions (Mariam's Content)")
         
+        st.plotly_chart(plotly_pie(data, "airbag_deployed", template="presentation"))
         # Airbag
-        st.plotly_chart(plotly_mean_median_bar(data, "airbag_deployed"))
+        st.plotly_chart(plotly_mean_median_bar(data, "airbag_deployed", color_discrete_sequence=["lightblue", "blue"]))
 
         # Called 911
-        st.plotly_chart(plotly_mean_median_bar(data, "called_911"))
+        st.plotly_chart(plotly_mean_median_bar(data, "called_911", color_discrete_sequence=["lightgreen", "green"]))
 
 
 
@@ -870,7 +892,7 @@ def main():
 
         # ------------------------ MARIAM's CODE ----------------------------------------
         # Attorney
-        st.plotly_chart(plotly_mean_median_bar(data,"private_attorney", template="plotly_dark"))
+        st.plotly_chart(plotly_mean_median_bar(data,"private_attorney", color_discrete_sequence=["darkorange","sienna"]))
 
         # Marital Status
         st.plotly_chart(plotly_mean_median_bar(data, "marital_status", template="presentation"))
