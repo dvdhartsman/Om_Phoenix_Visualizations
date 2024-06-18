@@ -373,7 +373,7 @@ def plotly_gender(data):
 
     # Create subplots
     fig = make_subplots(rows=2, cols=2, 
-                        subplot_titles=(f'Male Claim Amounts - Median Claim ${male_median_x:,.2f}', f'Female Claim Amounts - Median Claim ${female_median_x:,.2f}', 'Male vs Women Overlaid'),
+                        subplot_titles=(f'Men - Median Claim ${male_median_x:,.2f}', f'Women - Median Claim ${female_median_x:,.2f}', 'Male vs Women Overlaid'),
                         specs=[[{"type": "scatter"}, {"type": "scatter"}], [{"colspan": 2}, None]],
                         row_heights=[0.5, 0.5],
                         column_widths=[0.5, 0.5])
@@ -485,7 +485,7 @@ def plotly_injury_bar(data, group, **kwargs):
     grouped =  data.groupby(group)["claim_amount"].agg(["mean", "median"]).round(2).reset_index().sort_values(by="median", ascending=True).rename(columns={"mean":"Mean", "median":"Median"})
     fig = px.bar(data_frame = grouped, y=group, x=['Median', 'Mean'],
              labels={'value': "Claim Value", group:group.replace("_", " ").title(), "variable":"Statistic"},
-             title='Mean and Median Claims by Injury', barmode='group', **kwargs)
+             title=f'Mean and Median Claims by {group.replace("_", " ").title()}', barmode='group', **kwargs)
     fig.update_layout(showlegend=True, width=1200, height=675)
     fig.update_layout(xaxis=dict(tickformat='$,.2f'))
 
@@ -525,7 +525,7 @@ def plotly_age(data):
     return fig
 
 def plotly_age_hist(data, **kwargs):
-    fig = px.histogram(data_frame=data["age"], labels={"age":"Age"}, title="Total # of Claims by Age", **kwargs)
+    fig = px.histogram(data_frame=data["age"], labels={"age":"Age"}, title="Distribution of Claims by Age", **kwargs)
     fig.update_layout(legend_title="", xaxis={"title":"Age"}, yaxis={"title":"Number of Claims"})
     fig.update_traces(name="Claims")
     fig.update_traces(name="Claims", marker_line_color='black', marker_line_width=1.5)
@@ -559,11 +559,12 @@ def plotly_age_bracket(data, **kwargs):
 def plotly_age_line(data, group, **kwargs):
     grouped = data.groupby(group)["claim_amount"].agg(["median", "mean"]).round(-2).sort_index()\
     .rename(columns={"median":"Median", "mean":"Mean"}).reset_index()
-    fig = px.line(data_frame = grouped, x=group, y=["Median","Mean"], title="Trends in Claim Values Across Age Groups",
-                  labels=dict(group=group.replace("_", " ").title(), median="Median", mean="Mean"), markers=True, **kwargs)
+    fig = px.line(data_frame = grouped, x=group, y=["Median","Mean"], 
+                title=f"Trends in Claim Values Across {group.replace('_', ' ').title()}",
+                labels=dict(group=group.replace("_", " ").title(), median="Median", mean="Mean"), markers=True, **kwargs)
     fig.update_layout(legend_title_text="Statistic")
     fig.update_traces(hovertemplate="Claim Amount: %{x} <br>Group: %{y}")
-    fig.update_layout(yaxis=dict(tickformat='$,.2f', title="Claim Amount"), xaxis=dict(title="Age Group"))
+    fig.update_layout(yaxis=dict(tickformat='$,.2f', title="Claim Amount"), xaxis=dict(title=group.replace('_', ' ').title()))
 
     return fig
 
@@ -1212,13 +1213,14 @@ def main():
         fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
         st.plotly_chart(fig)
 
+        # FIX! 
         st.plotly_chart(plotly_injury_bar(data, "auto_make"))
         
 
         # auto_year -> CURIOUS DATA, implies older cars are of a higher claim value
         st.subheader("4. Model year:")
         st.plotly_chart(plotly_mean_median_bar(data,"auto_year", template="presentation").update_layout(xaxis=dict(tickvals=np.arange(1995, 2016))))
-
+        st.plotly_chart(plotly_age_line(data, "auto_year", template="presentation"))
         
 
         # # auto_model  -> probably not that important
@@ -1274,13 +1276,6 @@ def main():
         
         # Boolean Mask for the Filter
         age_condition = (data["age"] >= min_age) & (data["age"] <= max_age)
-
-        # age_bracket -----------
-        age_bracket_type_status = st.selectbox("Age Bracket:", [None] + list(data["age_bracket"].sort_values().unique()),index=0)
-        if age_bracket_type_status:
-            age_bracket_condition = (data["age_bracket"] == age_bracket_type_status)
-        else:
-            age_bracket_condition = True
         
         # gender -----------
         gender_type_status = st.selectbox("Gender:", [None] + list(data["gender"].unique()),index=0)
@@ -1311,7 +1306,8 @@ def main():
             incident_severity_type_condition = True
 
         # authorities_contacted -----------
-        authorities_contacted_type_status = st.selectbox("Authorities Contacted:", [None] + list(data["authorities_contacted"].unique()),index=0)
+        authorities_contacted_type_status = st.selectbox("Authorities Contacted:", [None] + \
+                                                         list(data["authorities_contacted"].dropna().unique()),index=0)
         if authorities_contacted_type_status:
             authorities_contacted_condition = (data["authorities_contacted"] == authorities_contacted_type_status)
         else:
@@ -1367,7 +1363,7 @@ def main():
 
 
         # auto_year -----------
-        auto_year_type_status = st.selectbox("Auto Year:", [None] + list(data["auto_year"].unique()),index=0)
+        auto_year_type_status = st.selectbox("Auto Year:", [None] + list(data["auto_year"].sort_values(ascending=False).unique()),index=0)
         if auto_year_type_status:
             auto_year_condition = (data["auto_year"] == auto_year_type_status)
         else:
@@ -1375,7 +1371,7 @@ def main():
         
 
         ### COLLECTING CONDITIONS  -----------------------------------------------------
-        all_conditions = age_condition & age_bracket_condition & gender_type_condition & accident_type_condition\
+        all_conditions = age_condition & gender_type_condition & accident_type_condition\
         & collision_type_condition & incident_severity_type_condition & authorities_contacted_condition\
         & state_condition & property_damage_condition & bodily_injuries_condition & police_report_available_condition\
         & auto_make_condition & auto_model_condition & auto_year_condition
