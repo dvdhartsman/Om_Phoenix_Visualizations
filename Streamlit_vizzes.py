@@ -542,7 +542,7 @@ def plotly_age_counts(data):
 
 
 def plotly_age_bracket(data, **kwargs):
-    group = data.groupby("age_bracket")["claim_amount"].agg(["median", "mean"]).round(-2).sort_index()\
+    group = data.groupby("age_bracket")["claim_amount"].agg(["median", "mean"]).round(-2).sort_index(ascending=False)\
     .rename(columns={"median":"Median", "mean":"Mean"})
     
     fig = px.bar(data_frame=group.reset_index(), y="age_bracket", x=["Median", "Mean"], 
@@ -643,13 +643,11 @@ def plotly_filtered_claims_bar(data, **kwargs):
 
     return fig
     
-# ----- main function ------------------------------------------------------------------
+# ---------------------------------------- main function ------------------------------------------------------------------
 
 def main():
-    # Sample Data
-    df_sample = pd.read_csv("sample_data_formatted.csv")
 
-    # Medical Practice Data
+    # Medical Practice Data -------------------------------------------------------------------------------
     df_med = pd.read_csv("Kaggle_medical_practice_20.csv", index_col=0)
 
     # Medical Data Basic Processing ----------------------------------------------------
@@ -684,263 +682,58 @@ def main():
     df_med['severity_category'] = df_med['severity'].map(severity_mapping)
 
 
-    # Car Insurance Data
+    # Car Insurance Data -----  ----------  -----------  --------------  -------------  ---------------  -------------------
     df_ins = pd.read_csv("Insurance_claims_mendeleydata_6.csv")
-
-    # Process the sample data
-    df_sample = preprocess_sample_dataset(df_sample)
 
     # Process the insurance Data
     df_ins = preprocess_insurance_data(df_ins)
 
-    st.header("Choose one of our 2 datasets for analysis")
+    st.header("**Analysis:**")
+    graph_description = """
+As you read through the analysis, we would also like you to be aware that these visualizations are interactive. 
+Most of the plots will allow you to zoom in on a region by clicking and dragging over an area with your mouse. 
+Also, if there is a legend in the upper-right of a visualization, you can click on the item in the legend to toggle that group on/off.
+"""
+    st.markdown(graph_description, )
+    st.subheader("Choose one of our 2 datasets for analysis")
     data_source = st.selectbox("Choose Data", ["Medical Malpractice", "Auto Insurance Claims"])
 
-    # "Car Accident Claims (Sample Data)" removed from our analysis due to not being used for modeling
-
     
-    # ----------------------------------------- First Data -------------------------------------------------
-    
-    # if data_source == "Car Accident Claims (Sample Data)":
-    #     data = df_sample
-        
-    #     st.subheader("This dataset is comprised of car accident claims.")
-    #     st.markdown("---")
-    #     st.subheader("State-wise Data")
-        
-    #     # Pie Chart
-    #     st.plotly_chart(plotly_pie(data, "state"))
-        
-    #     # Barplot
-    #     st.plotly_chart(plotly_states(data))
-        
-    #     # Boxplot
-    #     st.plotly_chart(plotly_box_states(data))
-        
-    #     # INJURY
-    #     st.header("Injury Type")
-
-    #     # Bar Chart of Injury Types
-    #     st.plotly_chart(plotly_injury_bar(data, "Type of Injury"))
-
-    #     # Option to pursue individual injuries
-    #     injury = st.selectbox("Choose an Injury to See the Distribution", data["Type of Injury"].unique())
-    #     inj_data = data.loc[(data["Type of Injury"] == injury) & (data["claim_amount"] < data["claim_amount"].quantile(.95))]
-        
-
-    #     # Injury Type Plots for Sample Data
-    #     st.header("Distributions of Claims by Injury")
-
-    #     # Histogram
-    #     st.subheader("Histogram")
-    #     st.plotly_chart(plotly_injury_hist(inj_data))
-
-    #     # Boxplot
-    #     st.subheader("Boxplot")
-    #     st.plotly_chart(plotly_boxplot_injury(inj_data))
-
-    #     # ----------------- AGE ----------------
-    
-    #     st.subheader("Age:")        
-    #     # Line plot of Age Value Counts - Like a Histogram
-    #     # st.plotly_chart(plotly_age_counts(data))
-
-    #     # Histogram
-    #     st.plotly_chart(plotly_age_hist(data))
-
-
-    #     # Line Plot of Median Claims by Age
-    #     st.plotly_chart(plotly_age(data))
-
-    #     # Mean and Median Barplots
-    #     st.plotly_chart(plotly_age_bracket(data))
-
-    #     # Scatterplot of Claim vs Age
-    #     st.subheader("Claims vs Age")
-    #     st.write("Select Groups from the Dropdown Menu to Compare Information")
-    #     keys = [None] + list(data.select_dtypes(exclude=np.number).columns.str.title().sort_values().str.replace("_", " "))
-    #     values = [None] + sorted(list(data.select_dtypes(exclude=np.number).columns), key=lambda x: x.lower())
-    #     age_col_dict = dict(zip(keys, values))
-
-    #     group = st.selectbox("Choose Detail to Analyze Sub-groups:", keys)
-    #     st.plotly_chart(plotly_scatter_age(data, age_col_dict[group]))
-
-    #     # ______________ MARIAM'S CODE -------------------------------------
-    #     st.subheader("Post-Accident Actions (Mariam's Content)")
-        
-    #     st.plotly_chart(plotly_pie(data, "airbag_deployed", template="presentation"))
-    #     # Airbag
-    #     st.plotly_chart(plotly_mean_median_bar(data, "airbag_deployed", color_discrete_sequence=["lightblue", "blue"]))
-
-    #     # Called 911
-    #     st.plotly_chart(plotly_mean_median_bar(data, "called_911", color_discrete_sequence=["lightgreen", "green"]))
-
-
-
-    #     #------------------------------------- Multi-filterable Plot for Sample Dataset ----------------------------
-    #     st.header("Try Out Multiple Filters:")
-    #     st.write('If you would like to deactivate a filter select: "None"')
-        
-    #     # Age -------
-    #     min_age, max_age = st.slider("Age Range", min_value = data["age"].min().astype(int), max_value=data["age"].max().astype(int), \
-    #                     value=(data["age"].min().astype(int), data["age"].max().astype(int)), step=1)
-        
-    #     # Boolean Mask for the Filter
-    #     age_condition = (data["age"] >= min_age) & (data["age"] <= max_age)
-        
-
-    #     # Accident Type ----------------------
-    #     accident_type_status = st.selectbox("Type of Accident:", [None] + list(data["accident_type"].unique()),index=0)
-    #     if accident_type_status:
-    #         accident_type_condition = (data["accident_type"] == accident_type_status)
-    #     else:
-    #         accident_type_condition = True
-
-        
-    #     # Airbag Deployed? -------------------
-    #     airbag_status = st.selectbox("Airbag Deployment:", 
-    #                                [None] + list(data["airbag_deployed"].unique()),index=0)
-    #     if airbag_status:
-    #         airbag_condition = (data["airbag_deployed"] == airbag_status)
-    #     else:
-    #         airbag_condition = True
-
-
-    #     # Truck or Bus Involved -----------------------------
-    #     truck_involved_status = st.selectbox("Truck or Bus Involved?:", [None] + list(data["truck_bus_involved"].dropna().unique()),index=0)
-    #     if truck_involved_status:
-    #         truck_involved_condition = (data["truck_bus_involved"] == truck_involved_status)
-    #     else:
-    #         truck_involved_condition = True
-
-    #     # Taxi Involved -----------------------------
-    #     taxi_involved_status = st.selectbox("Taxi Involved?:", [None] + list(data["taxi_involved"].dropna().unique()),index=0)
-    #     if taxi_involved_status:
-    #         taxi_involved_condition = (data["taxi_involved"] == taxi_involved_status)
-    #     else:
-    #         taxi_involved_condition = True
-
-    #     # Called 911 After -----------------------------
-    #     called911_status = st.selectbox("Did You Call 911?:", [None] + list(data["called_911"].dropna().unique()),index=0)
-    #     if called911_status:
-    #         called911_condition = (data["called_911"] == called911_status)
-    #     else:
-    #         called911_condition = True
-
-        
-    #     # Type of Injury -----------
-    #     injury_type = st.selectbox("Type of Injury:", 
-    #                                [None] + list(data["Type of Injury"].unique()),index=0)
-
-    #     if injury_type:
-    #         injury_condition = (data["Type of Injury"] == injury_type)
-    #     else:
-    #         injury_condition = True
-            
-        
-    #     # positive_mri_finding -----------------------------
-    #     mri_status = st.selectbox("MRI Positive?:", [None] + list(data["positive_mri_finding"].dropna().unique()),index=0)
-    #     if mri_status:
-    #         mri_condition = (data["positive_mri_finding"] == mri_status)
-    #     else:
-    #         mri_condition = True
-
-
-    #     # surgery_injection_recom -----------------------------
-    #     surgery_status = st.selectbox("Surgery or Injections Recommended?:", [None] + list(data["surgery_injection_recom"].dropna().unique()),index=0)
-    #     if surgery_status:
-    #         surgery_condition = (data["surgery_injection_recom"] == surgery_status)
-    #     else:
-    #         surgery_condition = True
-
-        
-    #     #------------ Apply all of the filters --------------------
-    #     all_conditions = age_condition & injury_condition & airbag_condition & accident_type_condition\
-    #           & truck_involved_condition & taxi_involved_condition & called911_condition & mri_condition\
-    #               & surgery_condition
-
-    #     st.markdown("---")
-    #     st.write("Here's a brief summary of claims for the filters you have selected:")
-        
-    #     # DF for comparison of numeric profiles
-    #     description_table = pd.DataFrame(data[all_conditions]["claim_amount"].describe().round(2)).reset_index()\
-    #                             .merge(pd.DataFrame(data[~all_conditions]["claim_amount"].describe()).reset_index()\
-    #                             .rename(columns={"claim_amount":"Excluded Data"})\
-    #                             .round(2)).reset_index()\
-    #                             .rename(columns={
-    #                                 "claim_amount":"Selected Data",
-    #                                 "index":"Statistic"}).drop(columns="level_0")
-        
-    #     # DF of all rows description
-    #     describe_df = pd.DataFrame()
-    #     describe_df["Statistic"] = description_table["Statistic"].copy()
-    #     describe_df["All Data"] = data["claim_amount"].describe().values.round(2)
-
-    #     # Merge 3rd df
-    #     description_table = description_table.merge(describe_df, on="Statistic")
-
-    #     # Mapping the statistic values
-    #     description_table["Statistic"] = description_table["Statistic"].map({"count":"Number of Rows",
-    #                "mean":"Average Value",
-    #                "std":"Standard Deviation",
-    #                "min":"Minimum Value",
-    #                "25%":"25th Percentile Value",
-    #                "50%":"Median Value",
-    #                "75%":"75th Percentile Value",
-    #                "max":"Maximum Value"})
-        
-    #     description_table.drop(2, inplace=True)
-    #     description_table = description_table.iloc[[0,2,3,4,1,5,6], :]
-
-    #     # Sample size warning
-    #     if data[all_conditions].shape[0] <= 10:
-    #         st.write("This is a small subset of data, so use discretion when interpretting the results.")
-
-    #     # Display the dataframe
-    #     st.dataframe(description_table, use_container_width=True, hide_index=True)
-
-    #     # Only display distribution plots if there are 10 or more observations
-    #     if data[all_conditions].shape[0] >= 10:
-    #         distribution_skew_condition = (data[all_conditions]["claim_amount"].max() - data[all_conditions]["claim_amount"].quantile(.9)) >\
-    #         (data[all_conditions]["claim_amount"].quantile(.9) - data[all_conditions]["claim_amount"].quantile(.75))
-            
-    #         # Account for extreme outliers
-    #         if distribution_skew_condition:
-    #             hist_data = data[all_conditions][data[all_conditions]["claim_amount"]\
-    #                                               < data[all_conditions]["claim_amount"].quantile(.9)]
-            
-    #             condition = "Selected Data without Extreme Outliers"
-    #             # Histogram
-    #             st.plotly_chart(plotly_filtered_claims(hist_data, condition))
-    #             # Boxplot
-    #             st.plotly_chart(plotly_boxplot_filtered(hist_data, condition))
-
-            
-    #         else: # If not distribution_skew_condition
-    #             condition = "Selected Data"
-    #             st.plotly_chart(plotly_filtered_claims(data[all_conditions], condition))
-    #             # Boxplot
-    #             st.plotly_chart(plotly_boxplot_filtered(data[all_conditions], condition))
-
-    #     # Comparison Bar Plot
-    #     st.plotly_chart(plotly_filtered_claims_bar(description_table))
-        
-
     # -------------------------------------------------------------------------------------------------------------
     # ------------------------- MEDICAL PRACTICE ------------------------------------------------------------------
     if data_source == "Medical Malpractice": 
         data = df_med
-        st.subheader("This dataset is comprised of medical malpractice claims.")
+        st.subheader("You have selected the Medical Malpractice dataset")
+        st.markdown("This dataset contains records of claims against medical practitioners from 20 different distinct specializations.")
         st.markdown("---")
         st.subheader("1. Gender:")
+        medical_gender_analysis = """
+Male and Female malpractice claims exhibit some interesting differences in their distributions. 
+Women receive \$44,873 more than Men in median claim amounts, but men *average* about \$16,500 more per claim than women.
+Women generally receive larger payouts for claims across different insurance types, with private insurance being the exception. 
+Men receive \$14,378 more than women for median claims for claims paid by private insurance.
+Also, in spite of men representing less than 40\% of claims in our data, they generally enjoy a 50\%-or-larger share of claims above \$300k. 
+This may be due to men being primary earners for their households, subsequently receiving more for anticipated lost wages.
+"""
+        st.markdown(medical_gender_analysis)
+        st.plotly_chart(plotly_pie(data, "gender", color_discrete_sequence=["lightcoral","blue"]))
         st.plotly_chart(plotly_gender(data))
         
         # st.subheader("Gender and Insurance Types")
         # st.plotly_chart(plotly_box_gender(data))
-        st.plotly_chart(px.bar(data_frame= data.groupby(["gender", "insurance"])["claim_amount"]\
-                               .agg("mean").round(2).reset_index(), x="insurance", y="claim_amount", color="gender", 
-                               barmode="group", title="Average Male and Female Claim Value for Different Insurance Types",
-                               color_discrete_sequence=["lightcoral","blue"]).update_layout(yaxis=dict(tickformat='$,.2f')))
+        ins_types_gender_stats = df_med.groupby(["gender", "insurance"])["claim_amount"]\
+                               .agg("mean").round(2).reset_index()
+        overall_gender_stats = df_med.groupby("gender")["claim_amount"].mean().round(2).reset_index()
+
+        gender_averages = pd.concat([ins_types_gender_stats, (overall_gender_stats)]).fillna("All Data")
+        gen_fig = px.bar(data_frame= gender_averages, y="insurance", x="claim_amount", color="gender", 
+                               barmode="group", title="Overall Average Male and Female Claim Value and Averages for Different Insurance Types",
+                               color_discrete_sequence=["lightcoral","blue"], width=1200, height=600,
+                               labels={"gender":"Gender", "insurance":"Insurance", "claim_amount":"Claim Amount"})\
+                                .update_layout(xaxis=dict(tickformat='$,.2f', title="Claim Amount"), yaxis=dict(title="Insurance"),
+                                               legend_title="Gender")
+        
+        st.plotly_chart(gen_fig)
         
         
         # Bins #1
@@ -954,9 +747,6 @@ def main():
 
         # Create New Feature for Claim Brackets
         data["claim_category"] = pd.cut(data["claim_amount"], bins=bins, labels=labels)
-
-
-        st.plotly_chart(plotly_pie(data, "gender", color_discrete_sequence=["lightcoral","blue"]))
         
         
         st.plotly_chart(px.line(data_frame = data.groupby("claim_category")["gender"].value_counts(normalize=True).multiply(100)\
@@ -967,8 +757,22 @@ def main():
                                 title="Men Represent a Larger Proportion of Large-Amount Claims Than Women", markers=True)\
                                 .update_layout(yaxis=dict(tickprefix='%')))
 
-        # Age ------------------
+        # Age ---------------------------------
         st.subheader("2. Age:")
+        age_analysis = """
+Highest Median Claim Amount: The median total claim amount is highest for infants at \$164,752, 
+indicating costly medical care likely due to intensive care needs.
+Children (2-12 years) have a median claim amount of \$116,237, slightly higher than teenagers (\$115,797), 
+suggesting significant medical costs for these age groups.
+Adults have a median claim amount of \$14,644 higher than young adults, indicating increased medical costs with age, 
+possibly due to consistent medical management, lower incidence of high-cost accidents, or different insurance coverage.
+Senior Citizens (60+ ) have a median claim amount of \$70,213, the lowest among all age groups, 
+possibly due to consistent medical management, lower accident incidence, or tailored insurance policies.
+
+"""
+
+        st.markdown(age_analysis)
+
         # Line Plot of Median Claims by Age
         # st.plotly_chart(plotly_age(data))
 
@@ -979,13 +783,30 @@ def main():
 
         st.plotly_chart(plotly_age_line(data, "age_bracket", template="seaborn"))
 
-        # ------------------------ MARIAM's CODE ----------------------------------------
+        # ------------------------ MARIAM's CODE ----------------   ATTORNEYS  ------------------------
         st.subheader("3. Attorney Involvement:")
+        attorney_analysis = """
+Hiring a private attorney correlates with a substantially higher median total claim amount of \$113,823, 
+compared to \$46,444 for cases where no private attorney was involved.
+This indicates a potential 145\% increase in median claim amounts when a private attorney is engaged.
+"""
+        st.markdown(attorney_analysis)
         st.plotly_chart(plotly_pie(data, "private_attorney", template="presentation"))
         # Attorney
         st.plotly_chart(plotly_mean_median_bar(data,"private_attorney", color_discrete_sequence=["mistyrose", "sienna"]))
 
-        st.subheader("4. Marital Status:")
+        # MARITAL STATUS --------------------------
+        st.subheader("4. Marital Status:")  # --------------- MARITAL STATUS
+        marital_analysis = """
+The median total claim amount is highest for divorced individuals at \$339,190, 
+indicating potentially higher settlements related to divorce proceedings.
+Single individuals exhibit a moderate median claim amount of \$102,312, 
+reflecting diverse financial circumstances and varying insurance coverage, 
+which is approximately 2\% higher than that of married individuals.
+Those with unknown marital status have the lowest median claim amount at \$47,931, 
+suggesting incomplete or undisclosed marital status data impacting claim outcomes.
+"""
+        st.markdown(marital_analysis)
         st.plotly_chart(plotly_pie(data, "marital_status", template="presentation"))
         # Marital Status
         st.plotly_chart(plotly_mean_median_bar(data, "marital_status", template="plotly_dark"))
@@ -1044,9 +865,16 @@ def main():
         # fig_severity_claim.update_traces(dict(hovertemplate={'y'}, yhoverformat="$,.2f"))
         st.plotly_chart(fig_severity_claim)
 
-
+        #### MEDICAL SPECIALTY
         st.subheader("6. Medical Specialty:")
-        # Medical Specialty ### VERY IMPORTANT!!!!!!!!! #############
+        specialty_analysis = """
+Pediatrics, Dermatology, and Urological Surgery exhibit the highest median total claim amounts, 
+indicating potentially higher costs and complexities in medical treatments within these specialities.
+Radiology, Anesthesiology, and Emergency Medicine have the lowest median total claim amounts, 
+reflecting comparatively lower costs associated with their respective medical practices.
+"""
+        st.markdown(specialty_analysis)
+        # Medical Specialty ### VERY IMPORTANT!!!!!!!!! ##############
         st.plotly_chart(plotly_injury_bar(data, "specialty", template="seaborn"))
 # .update_layout(yaxis=dict(tickformat='$,.2f')
 
