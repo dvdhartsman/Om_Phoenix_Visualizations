@@ -1029,10 +1029,10 @@ reflecting comparatively lower costs associated with their respective medical pr
         gender_paragraph = """"Gender" refers to the policy holder (liable party) for this dataset. 
         The analysis of total claim amounts by gender reveals that 
         female policyholders tend to pay slightly larger claims compared to male policyholders.
-The mean (average) claim amount for females is \$51,169.66, 
-which is 3.94\% higher than the male mean of \$49,229.80.
+The mean (average) claim amount for females is \$51,169, 
+which is 3.94\% higher than the male mean of \$49,230.
 The median, representing the middle value of all claims, 
-is higher for females at \$57,120.00 compared to \$55,750.00 for males, showing a 2.46\% difference.
+is higher for females at \$57,120 compared to \$55,750 for males, showing a 2.46\% difference.
 The mean provides an overall average but can be affected by extremely high or low claims.
 The median offers a better sense of the typical claim amount.
 Both metrics indicate that, on average, female policyholders report similar but mariginally higher claim amounts than their male counterparts.
@@ -1106,7 +1106,7 @@ ranging from \$42,853 to \$48,323, likely indicating improved vehicle safety and
 
         state_paragraph ="""
         New York (NY) makes up the largest proportion of claims in our data, and it also has the largest
-          mean and median claim values at roughly \$54,250.00 and \$58,675.00 respectively. With the exception of 
+          mean and median claim values at roughly \$54,250 and \$58,675 respectively. With the exception of 
           Ohio, all the states represented in our data are on the east coast. Ohio has the smallest average and median claims
           of all the states present while also representing the fewest claims in the data.
 """
@@ -1183,9 +1183,9 @@ smaller compensation at \$5,300 on average.
         received the largest claims. They have an average claim amount of about \$61,439 and a median value of \$60,000. 
         Next largest, incidents where an ambulance was contacted have an average claim amount of approximately 
         \$60,357, with a median value of \$59,300. Third, incidents requiring police intervention have a lower mean claim amount of roughly \$44,193, 
-with a median of \$51,800.  "Other" authorities had the largest the average claim amount of around \$65,156 
+with a median of \$51,800.  "Other" authorities had the largest average claim amount of around \$65,156 
 and a median value of \$64,080. While police do address issues that result in large claims, they seem to
-handle the overwhelming majority of small claim instances. Notice how only police handle claims with values
+handle the overwhelming majority of small claim instances. Notice how *only police* handle claims with values
 less than \$18,000
 """
         st.markdown(authorities_paragraph)
