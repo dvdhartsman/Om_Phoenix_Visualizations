@@ -680,12 +680,13 @@ Also, if there is a legend in the upper-right of a visualization, you can click 
         st.subheader("You have selected the Medical Malpractice dataset")
         st.markdown("This dataset contains records of claims against medical practitioners from 20 different distinct specializations.")
         st.markdown("---")
-        st.subheader("1. Gender:")
+        # st.subheader("1. Gender:")
         
         col1, col2 = st.columns([3, 3])
 
         with col2:
-            medical_gender_analysis = """<br><br>
+            st.subheader("1. Gender:")
+            medical_gender_analysis = """
 Medical malpractice claims for men and women have some interesting differences. 
 Women's median ("typical", representing the middle value of all cases) receive \$44,873 more than men for their median claims. 
 Men *average* about \$16,500 more per claim than women. This is attributed to men 
@@ -696,7 +697,7 @@ subsequently they may receive more than women for anticipated lost wages.
 Women receive larger average payouts for claims across most types of insurance, with private insurance being the exception. 
 Men receive a staggering \$113,300 more than women on average for claims paid by private insurance.
 """
-            st.markdown(medical_gender_analysis, unsafe_allow_html=True)
+            st.markdown(medical_gender_analysis)
         with col1:
             st.plotly_chart(plotly_pie(data, "gender", color_discrete_sequence=["lightcoral","blue"]))
             
@@ -744,12 +745,14 @@ Men receive a staggering \$113,300 more than women on average for claims paid by
         
 
         # Age ---------------------------------
-        st.subheader("2. Age:")
+        st.markdown('---')
+        # st.subheader("2. Age:")
         
-        c1, c2 = st.columns([1.5,3])
+        c1, c2 = st.columns([1,2])
 
         with c1:
-            age_analysis = """<br><br>
+            st.subheader("2. Age:")
+            age_analysis = """
     The data contains claims for people aged 0-87 years old, with the middle 50\% of values being between 28-58.
     Very young victims aged 0-5, as well as people in their prime earning years aged 35-55 have the highest average 
     claim values. These values trend incrementally lower as the victim's age increases, the opposite relationship from what we observed in vehicle claims. 
@@ -759,7 +762,7 @@ Men receive a staggering \$113,300 more than women on average for claims paid by
 
     """
 
-            st.markdown(age_analysis,unsafe_allow_html=True)
+            st.markdown(age_analysis)
 
         with c2: 
             # Line Plot of Median Claims by Age
@@ -773,11 +776,13 @@ Men receive a staggering \$113,300 more than women on average for claims paid by
         st.plotly_chart(plotly_age_line(data, "age_bracket", template="seaborn"))
 
         # ------------------------ MARIAM's CODE ----------------   ATTORNEYS  ------------------------
-        st.subheader("3. Attorney Involvement:")
+        st.markdown('---')
+        # st.subheader("3. Attorney Involvement:")
 
         at1, at2 = st.columns([3,2])
         with at2:
-            attorney_analysis = """<br><br>
+            st.subheader("3. Attorney Involvement:")
+            attorney_analysis = """
 Hiring a private attorney results in receiving substantially higher claim amounts. Average claims with a lawyer involved
 receive \$193,718 compared to \$86,870 without a lawyer, representing an increase in value of 123\%.
 Median claims settled with the assistance of an attorney receive \$113,823
@@ -792,10 +797,12 @@ This reflects an even larger potential increase of 145\% for typical claim amoun
         st.plotly_chart(plotly_mean_median_bar(data,"private_attorney", color_discrete_sequence=["mistyrose", "sienna"]))
 
         # MARITAL STATUS --------------------------
-        st.subheader("4. Marital Status:")  # --------------- MARITAL STATUS
+        st.markdown('---')
+        # st.subheader("4. Marital Status:")  # --------------- MARITAL STATUS
         mar1, mar2 = st.columns([2,3])
         with mar1:
-            marital_analysis = """<br><br>
+            st.subheader("4. Marital Status:")
+            marital_analysis = """
 The average claim amount is highest for divorced individuals at \$371,600.
 Single and married individuals exhibit very similar claim profiles to one another. 
 In this dataset, single victims receive only about \$2,000 more for claims on average compared to married victims.
@@ -803,7 +810,7 @@ Widowed people receive the smallest claims of all explicitly labeled groups, pos
 Those with unknown marital status have a slightly higher average claim than widows, but
 they have by far the lowest median claim amount at \$47,931.
 """
-            st.markdown(marital_analysis, unsafe_allow_html=True)
+            st.markdown(marital_analysis)
         with mar2:
             st.plotly_chart(plotly_pie(data, "marital_status", template="presentation"))
         
@@ -819,10 +826,12 @@ they have by far the lowest median claim amount at \$47,931.
 
         # Severity Analysis
         # Mapping severity levels to categories
-        st.subheader("5. Severity:")
+        st.markdown('---')
+        # st.subheader("5. Severity:")
         sev1, sev2 = st.columns([3,2])
         with sev2:    
-            severity_points = """<br><br>The severity of injury follows a logical progression. As the damage a victim 
+            st.subheader("5. Severity:")
+            severity_points = """The severity of injury follows a logical progression. As the damage a victim 
         suffers increases, the larger the average claim value becomes. Claims stemming from the death of
         an individual surprisingly have lower average values than non-lethal claims. This indicates that
         the costs associated with recovery, lost wages, and trauma are very substantial. Even though death
@@ -830,7 +839,7 @@ they have by far the lowest median claim amount at \$47,931.
         compensation for extended treatment and recovery programs.
                     """
         
-            st.markdown(severity_points, unsafe_allow_html=True)
+            st.markdown(severity_points)
         # st.markdown(
         #     f"""
         #         <style>
@@ -878,22 +887,25 @@ they have by far the lowest median claim amount at \$47,931.
         st.plotly_chart(fig_severity_claim)
 
         #### MEDICAL SPECIALTY
-        st.subheader("6. Medical Specialty:")
+        st.markdown('---')
+        # st.subheader("6. Medical Specialty:")
         med1, med2 = st.columns([2,4])
         with med1:
-            specialty_analysis = """<br><br><br><br>
+            st.subheader("6. Medical Specialty:")
+            specialty_analysis = """
 Pediatrics, Dermatology, and Urological Surgery exhibit the highest average claim amounts, 
 indicating potentially higher costs and complexities in medical treatments within these specialities.
 Opthamology, Radiology, and Anesthesiology have the lowest average claims, 
 reflecting comparatively lower costs associated with their respective medical incidents.
 """
-            st.markdown(specialty_analysis, unsafe_allow_html=True)
+            st.markdown(specialty_analysis)
         # Medical Specialty ### VERY IMPORTANT!!!!!!!!! ##############
         with med2:
             st.plotly_chart(plotly_injury_bar(data, "specialty", template="seaborn"))
 # .update_layout(yaxis=dict(tickformat='$,.2f')
 
         # ---------------------------------- FILTERS -----------------------------------------------
+        st.markdown('---')
         st.header("Try Out Multiple Filters:")
         st.write('If you would like to deactivate a filter select: "None"')
         
