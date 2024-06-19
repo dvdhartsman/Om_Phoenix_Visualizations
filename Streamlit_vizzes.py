@@ -820,8 +820,8 @@ they have by far the lowest median claim amount at \$47,931.
         # Severity Analysis
         # Mapping severity levels to categories
         st.subheader("5. Severity:")
-        sev1, sev2 = st.columns([2,3])
-        with sev1:    
+        sev1, sev2 = st.columns([3,2])
+        with sev2:    
             severity_points = """<br><br>The severity of injury follows a logical progression. As the damage a victim 
         suffers increases, the larger the average claim value becomes. Claims stemming from the death of
         an individual surprisingly have lower average values than non-lethal claims. This indicates that
@@ -845,7 +845,7 @@ they have by far the lowest median claim amount at \$47,931.
         #     unsafe_allow_html=True
         # )
         
-        with sev2:
+        with sev1:
             st.plotly_chart(plotly_pie(data, "severity_category"))
 
         # Define the order of severity categories
@@ -879,8 +879,8 @@ they have by far the lowest median claim amount at \$47,931.
 
         #### MEDICAL SPECIALTY
         st.subheader("6. Medical Specialty:")
-        med1, med2 = st.columns([4,2])
-        with med2:
+        med1, med2 = st.columns([2,4])
+        with med1:
             specialty_analysis = """<br><br><br><br>
 Pediatrics, Dermatology, and Urological Surgery exhibit the highest average claim amounts, 
 indicating potentially higher costs and complexities in medical treatments within these specialities.
@@ -889,7 +889,7 @@ reflecting comparatively lower costs associated with their respective medical in
 """
             st.markdown(specialty_analysis, unsafe_allow_html=True)
         # Medical Specialty ### VERY IMPORTANT!!!!!!!!! ##############
-        with med1:
+        with med2:
             st.plotly_chart(plotly_injury_bar(data, "specialty", template="seaborn"))
 # .update_layout(yaxis=dict(tickformat='$,.2f')
 
