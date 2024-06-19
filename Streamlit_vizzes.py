@@ -384,6 +384,7 @@ def plotly_gender(data):
         trace["hoverinfo"] = 'x'
         trace["xhoverformat"] = "$,.2f"
         trace["showlegend"] = False
+        trace["hovertemplate"] = 'Claim Amount: %{x:$,.2f}'
         fig.add_trace(trace, row=1, col=1)
         
 
@@ -401,6 +402,7 @@ def plotly_gender(data):
         trace["hoverinfo"] = 'x'
         trace["xhoverformat"] = "$,.2f"
         trace["showlegend"] = False
+        trace["hovertemplate"] = 'Claim Amount: %{x:$,.2f}'
         fig.add_trace(trace, row=1, col=2)
 
     female_median_y = female_kde['data'][0]['y'].max()
@@ -415,16 +417,16 @@ def plotly_gender(data):
     # Overlaid KDE Plot
     fig.add_trace(go.Scatter(x=male_kde['data'][0]['x'], y=male_kde['data'][0]['y'], 
                              mode='lines', name='Male', fill='tozeroy', line=dict(color='blue'), opacity=0.1,
-                             hoverinfo='x', xhoverformat="$,.2f"), 
+                             hoverinfo='x', xhoverformat="$,.2f", hovertemplate = 'Claim Amount: %{x:$,.2f}'), 
                   row=2, col=1)
 
     fig.add_trace(go.Scatter(x=female_kde['data'][0]['x'], y=female_kde['data'][0]['y'], 
                              mode='lines', name='Female', fill='tozeroy', line=dict(color='lightcoral'), opacity=0.1,
-                             hoverinfo='x', xhoverformat="$,.2f"), 
+                             hoverinfo='x', xhoverformat="$,.2f", hovertemplate = 'Claim Amount: %{x:$,.2f}'), 
                   row=2, col=1)
 
     # Update layout
-    fig.update_layout(height=800, width=1200, title_text="Distribution of All Claim Amounts for Men vs Women")
+    fig.update_layout(height=800, width=1200, title_text="Claim Distribution - Men vs Women: Higher Peaks Indicate More-Common Claim Amounts")
     fig.update_xaxes(title_text="Total Claim in USD", row=1, col=1)
     fig.update_xaxes(title_text="Total Claim in USD", row=1, col=2)
     fig.update_xaxes(title_text="Total Claim in USD", row=2, col=1)
@@ -526,8 +528,8 @@ def plotly_age(data):
 
 def plotly_age_hist(data, **kwargs):
     fig = px.histogram(data_frame=data["age"], labels={"age":"Age"}, title="Distribution of Claims by Age", **kwargs)
-    fig.update_layout(legend_title="", xaxis={"title":"Age"}, yaxis={"title":"Number of Claims"})
-    fig.update_traces(name="Claims")
+    fig.update_layout(legend_title="", xaxis={"title":"Age"}, yaxis={"title":"Number of Claims"}, showlegend=False)
+    fig.update_traces(name="Claims", hovertemplate="Age %{x}<br> Number of Claims %{y}")
     fig.update_traces(name="Claims", marker_line_color='black', marker_line_width=1.5)
     
     return fig
@@ -692,14 +694,14 @@ def main():
     graph_description = """
 As you read through the analysis, we would also like you to be aware that these visualizations are interactive. 
 Most of the plots will allow you to zoom in on a region by clicking and dragging over an area with your mouse. 
-Also, if there is a legend in the upper-right of a visualization, you can click on the item in the legend to toggle that group on/off.
+Also, if there is a legend in the upper-right of a visualization, you can click on an item in the legend to toggle that group on/off.
 """
-    st.markdown(graph_description, )
+    st.markdown(graph_description)
     st.subheader("Choose one of our 2 datasets for analysis")
     data_source = st.selectbox("Choose Data", ["Medical Malpractice", "Auto Insurance Claims"])
 
     
-    # -------------------------------------------------------------------------------------------------------------
+    # -------------First ---------------------------------------Section------------------------------------------------
     # ------------------------- MEDICAL PRACTICE ------------------------------------------------------------------
     if data_source == "Medical Malpractice": 
         data = df_med
@@ -1024,29 +1026,70 @@ reflecting comparatively lower costs associated with their respective medical pr
         # Gender
         st.subheader("1. Gender:")
         st.write('"Gender" refers to the policy holder (liable party) for this dataset')
+        gender_paragraph = """The analysis of total claim amounts by gender reveals that 
+        female policyholders tend to pay slightly larger claims compared to male policyholders.
+The mean (average) claim amount for females is \$51,169.66, 
+which is 3.94\% higher than the male mean of \$49,229.80.
+The median, representing the middle value of all claims, 
+is higher for females at \$57,120.00 compared to \$55,750.00 for males, showing a 2.46\% difference.
+The mean provides an overall average but can be affected by extremely high or low claims.
+The median offers a better sense of the typical claim amount.
+Both metrics indicate that, on average, female policyholders report similar but mariginally higher claim amounts than their male counterparts.
+"""
+        
+        st.markdown(gender_paragraph)
         st.plotly_chart(plotly_gender(data))
         
         # age_bracket
         st.subheader("2. Age:")
+
+        age_paragraph = """
+The ages in this dataset are confined to a fairly narrow range. 80\% of all claimants fall between
+28-51 years old. As age increases, so does the average claim amount, with policyholders aged 60-65 having 
+the highest average claims at \$58,900. Overall, there is a discernible upward trend in claim amounts with increasing age, 
+underscoring a positive correlation between age and claim size. This likely indicates that older 
+drivers tend to own more expensive cars, leading to higher claim settlements.
+"""
+# These findings highlight the significance of age as a determinant in assessing 
+# insurance claim risks and guiding strategic policy adjustments.
+
+        st.markdown(age_paragraph)
         st.plotly_chart(plotly_age_hist(data, color_discrete_sequence=["sienna"]))
         st.plotly_chart(plotly_age_bracket(data, template="seaborn"))
         st.plotly_chart(plotly_age_line(data, "age_bracket", template="seaborn"))
 
         # Make of Car -> probably not that important
         st.subheader("3. Auto Manufacturer:")
+        auto_paragraph = """
+Nissan, Saab, and Subaru comprise the largest proportions of manufacturers in our data with 9\% each respectively.
+Claims involving Ford vehicles have the highest median claim amount of around \$63,500 followed closely by
+luxury brand BMW at \$62,480. The largest and smallest average claims for each manufacturer are separated by a range of 
+around \$10,000.
+
+"""
+        st.markdown(auto_paragraph)
 
         # Treemap
-        fig = px.treemap(data[["auto_make", "auto_model"]].value_counts(normalize=True).reset_index(), 
+        fig = px.treemap(data[["auto_make", "auto_model"]].value_counts(normalize=True).round(2).reset_index(), 
                          path=["auto_make", "auto_model"], values="proportion", title="Distribution of Makes and Models")
         fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+        fig.update_traces(hovertemplate="Vehicle %{label}<br>Percentage of Records %{value:.1%}")
         st.plotly_chart(fig)
-
-        # FIX! 
+ 
         st.plotly_chart(plotly_injury_bar(data, "auto_make"))
         
 
         # auto_year -> CURIOUS DATA, implies older cars are of a higher claim value
         st.subheader("4. Model year:")
+        model_year_paragraph = """The analysis of auto year and claim amounts displayed trends that indicate
+          older model years tend to receive higher average and median claim amounts compared to newer models.
+For example, vehicles from the mid-to-late 1990s and early 2000s (e.g., 1995-2005) show higher average claim amounts, 
+ranging from \$47,134 to \$57,535. This suggests potentially higher repair costs or difficult-to-locate parts.
+In contrast, newer model years from 2010 onwards (e.g., 2010-2015) demonstrate lower average claim amounts,
+ranging from \$42,853 to \$48,323, likely indicating improved vehicle safety and durability standards.
+
+"""
+        st.markdown(model_year_paragraph)
         st.plotly_chart(plotly_mean_median_bar(data,"auto_year", template="presentation").update_layout(xaxis=dict(tickvals=np.arange(1995, 2016))))
         st.plotly_chart(plotly_age_line(data, "auto_year", template="presentation"))
         
