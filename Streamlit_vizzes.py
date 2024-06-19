@@ -339,7 +339,6 @@ def plotly_box_states(data):
 
 # Gender Plots -----------------------------------------------------
 
-# Plot to show KDEs of male, female and overlay of both
 def plotly_gender(data):
     """
     Function to generate a plotly figure of KDE distributions for Genders 
@@ -351,91 +350,64 @@ def plotly_gender(data):
 
     Returns
     -----------
-    plotly figure | 3 kde plots with hover values of x coordinates (claim value)
+    plotly figure | kde plots overlaid with hover values of x coordinates (claim value)
 
     Errors
     -----------
     KeyError if data do not contain the correct columns
     """
-    # if "claim_amount" in data.columns:
-    #     data = data.rename(columns={"claim_amount":"total_claim_amount"})
-
     male_data = data.query("gender == 'Male'")['claim_amount']
     female_data = data.query("gender == 'Female'")['claim_amount']
 
     male_median_x = male_data.median().round(2)
     female_median_x = female_data.median().round(2)  
 
-    # KDEs fig.update_layout(yaxis=dict(tickformat='$,.2f'))
     male_kde = ff.create_distplot([male_data], group_labels=['Male'], show_hist=False, show_rug=False)
-    
     female_kde = ff.create_distplot([female_data], group_labels=['Female'], show_hist=False, show_rug=False)
 
-    # Create subplots
-    fig = make_subplots(rows=2, cols=2, 
-                        subplot_titles=(f'Men - Median Claim ${male_median_x:,.2f}', f'Women - Median Claim ${female_median_x:,.2f}', 'Male vs Women Overlaid'),
-                        specs=[[{"type": "scatter"}, {"type": "scatter"}], [{"colspan": 2}, None]],
-                        row_heights=[0.5, 0.5],
-                        column_widths=[0.5, 0.5])
-    
+    # Create the overlaid plot
+    fig = go.Figure()
 
     # Male KDE Plot
-    for trace in male_kde['data']:
-        trace["hoverinfo"] = 'x'
-        trace["xhoverformat"] = "$,.2f"
-        trace["showlegend"] = False
-        trace["hovertemplate"] = 'Claim Amount: %{x:$,.2f}'
-        fig.add_trace(trace, row=1, col=1)
-        
-
-    male_median_y = male_kde['data'][0]['y'].max()
-    
-    # Adding a vline
-    fig.add_shape(type="line",
-                  x0=male_median_x, y0=0,
-                  x1=male_median_x, y1=male_median_y,
-                  line={"color":"darkred","dash":"dash"},
-                  row=1, col=1)
-
-    # Female KDE Plot
-    for trace in female_kde['data']:
-        trace["hoverinfo"] = 'x'
-        trace["xhoverformat"] = "$,.2f"
-        trace["showlegend"] = False
-        trace["hovertemplate"] = 'Claim Amount: %{x:$,.2f}'
-        fig.add_trace(trace, row=1, col=2)
-
-    female_median_y = female_kde['data'][0]['y'].max()
-    
-    # Adding a vline
-    fig.add_shape(type="line", 
-              x0=female_median_x, y0=0, 
-              x1=female_median_x, y1=female_median_y, 
-              line=dict(color="darkred", dash="dash"),
-              row=1, col=2)
-
-    # Overlaid KDE Plot
     fig.add_trace(go.Scatter(x=male_kde['data'][0]['x'], y=male_kde['data'][0]['y'], 
                              mode='lines', name='Male', fill='tozeroy', line=dict(color='blue'), opacity=0.1,
-                             hoverinfo='x', xhoverformat="$,.2f", hovertemplate = 'Claim Amount: %{x:$,.2f}'), 
-                  row=2, col=1)
+                             hoverinfo='x', xhoverformat="$,.2f", hovertemplate='Claim Amount: %{x:$,.2f}'))
 
+    # Female KDE Plot
     fig.add_trace(go.Scatter(x=female_kde['data'][0]['x'], y=female_kde['data'][0]['y'], 
                              mode='lines', name='Female', fill='tozeroy', line=dict(color='lightcoral'), opacity=0.1,
-                             hoverinfo='x', xhoverformat="$,.2f", hovertemplate = 'Claim Amount: %{x:$,.2f}'), 
-                  row=2, col=1)
+                             hoverinfo='x', xhoverformat="$,.2f", hovertemplate='Claim Amount: %{x:$,.2f}'))
+
+    # Adding vertical lines for medians as scatter traces for legend
+    male_median_y = max(male_kde['data'][0]['y'])
+    female_median_y = max(female_kde['data'][0]['y'])
+
+    fig.add_trace(go.Scatter(
+        x=[male_median_x, male_median_x], y=[0, male_median_y],
+        mode="lines",
+        line=dict(color="lightblue", dash="dash"),
+        name=f"Male Median ${male_median_x:,.0f}"
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=[female_median_x, female_median_x], y=[0, female_median_y],
+        mode="lines",
+        line=dict(color="lightpink", dash="dash"),
+        name=f"Female Median ${female_median_x:,.0f}"
+    ))
 
     # Update layout
-    fig.update_layout(height=800, width=1200, title_text="Claim Distribution - Men vs Women: Higher Peaks Indicate More-Common Claim Amounts")
-    fig.update_xaxes(title_text="Total Claim in USD", row=1, col=1)
-    fig.update_xaxes(title_text="Total Claim in USD", row=1, col=2)
-    fig.update_xaxes(title_text="Total Claim in USD", row=2, col=1)
-
-    fig.update_layout(showlegend=True, legend=dict(x=0.875, y=0.275))
+    fig.update_layout(height=600, width=800, 
+                      title_text="Claim Distribution - Men vs Women: Higher Peaks Indicate More-Common Claim Amounts",
+                      xaxis_title="Total Claim in USD",
+                      yaxis_title="Density",
+                      showlegend=True,
+                      legend=dict(x=0.875, y=0.875))
     fig.update_yaxes(showticklabels=False)
 
-    # Show plot
     return fig
+
+
 # fig.update_layout(yaxis=dict(tickformat='$,.2f'))
 
 def plotly_box_gender(data):
@@ -527,7 +499,7 @@ def plotly_age(data):
     return fig
 
 def plotly_age_hist(data, **kwargs):
-    fig = px.histogram(data_frame=data["age"], labels={"age":"Age"}, title="Distribution of Claims by Age", **kwargs)
+    fig = px.histogram(data_frame=data["age"], labels={"age":"Age"}, title="Number of Claims by Age", **kwargs)
     fig.update_layout(legend_title="", xaxis={"title":"Age"}, yaxis={"title":"Number of Claims"}, showlegend=False)
     fig.update_traces(name="Claims", hovertemplate="Age %{x}<br> Number of Claims %{y}")
     fig.update_traces(name="Claims", marker_line_color='black', marker_line_width=1.5)
@@ -553,7 +525,7 @@ def plotly_age_bracket(data, **kwargs):
                 barmode="group", **kwargs)
 
     fig.update_layout(legend_title_text="Statistic")
-    fig.update_traces(hovertemplate="Claim Amount: %{x} <br>Group: %{y}")
+    fig.update_traces(hovertemplate="Claim Amount: %{x} <br>Age Group: %{y}")
     fig.update_layout(xaxis=dict(tickformat='$,.2f', title="Claim Amount"), yaxis=dict(title="Age Group"))
     
     return fig
@@ -709,38 +681,30 @@ Also, if there is a legend in the upper-right of a visualization, you can click 
         st.markdown("This dataset contains records of claims against medical practitioners from 20 different distinct specializations.")
         st.markdown("---")
         st.subheader("1. Gender:")
-        medical_gender_analysis = """
-Male and Female malpractice claims exhibit some interesting differences in their distributions. 
-Women receive \$44,873 more than Men in median claim amounts, but men *average* about \$16,500 more per claim than women.
-Women generally receive larger payouts for claims across different insurance types, with private insurance being the exception. 
-Men receive \$14,378 more than women for median claims for claims paid by private insurance.
-Also, in spite of men representing less than 40\% of claims in our data, they generally enjoy a 50\%-or-larger share of claims above \$300k. 
-This may be due to men being primary earners for their households, subsequently receiving more for anticipated lost wages.
-"""
-        st.markdown(medical_gender_analysis)
-        st.plotly_chart(plotly_pie(data, "gender", color_discrete_sequence=["lightcoral","blue"]))
-        st.plotly_chart(plotly_gender(data))
         
-        # st.subheader("Gender and Insurance Types")
-        # st.plotly_chart(plotly_box_gender(data))
-        ins_types_gender_stats = df_med.groupby(["gender", "insurance"])["claim_amount"]\
-                               .agg("mean").round(2).reset_index()
-        overall_gender_stats = df_med.groupby("gender")["claim_amount"].mean().round(2).reset_index()
+        col1, col2 = st.columns([3, 3])
 
-        gender_averages = pd.concat([ins_types_gender_stats, (overall_gender_stats)]).fillna("All Data")
-        gen_fig = px.bar(data_frame= gender_averages, y="insurance", x="claim_amount", color="gender", 
-                               barmode="group", title="Overall Average Male and Female Claim Value and Averages for Different Insurance Types",
-                               color_discrete_sequence=["lightcoral","blue"], width=1200, height=600,
-                               labels={"gender":"Gender", "insurance":"Insurance", "claim_amount":"Claim Amount"})\
-                                .update_layout(xaxis=dict(tickformat='$,.2f', title="Claim Amount"), yaxis=dict(title="Insurance"),
-                                               legend_title="Gender")
-        
-        st.plotly_chart(gen_fig)
-        
-        
+        with col2:
+            medical_gender_analysis = """<br><br>
+Medical malpractice claims for men and women have some interesting differences. 
+Women's median ("typical", representing the middle value of all cases) receive \$44,873 more than men for their median claims. 
+Men *average* about \$16,500 more per claim than women. This is attributed to men 
+having around a 50\%-or-larger share of claims valued above \$300k. 
+This is in spite of men representing less than 40\% of all the claims in our data. 
+This could be attributed to men commonly being the primary earners for their households, and
+subsequently they may receive more than women for anticipated lost wages.
+Women receive larger average payouts for claims across most types of insurance, with private insurance being the exception. 
+Men receive a staggering \$113,300 more than women on average for claims paid by private insurance.
+"""
+            st.markdown(medical_gender_analysis, unsafe_allow_html=True)
+        with col1:
+            st.plotly_chart(plotly_pie(data, "gender", color_discrete_sequence=["lightcoral","blue"]))
+            
+        st.plotly_chart(plotly_gender(data))
+
         # Bins #1
         bins = [-np.inf, 200_000, 250_000, 300_000, 350_000, 400_000, 450_000, 500_000,
-                                       550_000, 600_000, 650_000, 700_000, 750_000, 800_000, 850_000, 900_000, np.inf]
+                                    550_000, 600_000, 650_000, 700_000, 750_000, 800_000, 850_000, 900_000, np.inf]
 
         labels = ["<$200k", "$200-250k", "$250-300k", "$300-350k", "$350-400k", "$400-450k", "$450-500k", "$500-550k", "$550-600k",
                 "$600-650k", "$650-700k", "$700-750k", "$750-800k", "$800-850k", "$850-900k", ">$900k"]
@@ -754,64 +718,99 @@ This may be due to men being primary earners for their households, subsequently 
         st.plotly_chart(px.line(data_frame = data.groupby("claim_category")["gender"].value_counts(normalize=True).multiply(100)\
                                 .round(2).reset_index(),x="claim_category", y="proportion", color="gender", 
                                 color_discrete_sequence=["lightcoral","blue"], labels={"gender":"Gender", 
-                                                                                       "proportion":"Percentage",
-                                                                                       "claim_category":"Value Range"},
+                                                                                    "proportion":"Percentage",
+                                                                                    "claim_category":"Value Range"},
                                 title="Men Represent a Larger Proportion of Large-Amount Claims Than Women", markers=True)\
                                 .update_layout(yaxis=dict(tickprefix='%')))
+        
+        
+        # st.subheader("Gender and Insurance Types")
+        # st.plotly_chart(plotly_box_gender(data))  # removed due to being too technical
+        
+        
+        ins_types_gender_stats = df_med.groupby(["gender", "insurance"])["claim_amount"]\
+                            .agg("mean").round(2).reset_index()
+        overall_gender_stats = df_med.groupby("gender")["claim_amount"].mean().round(2).reset_index()
+
+        gender_averages = pd.concat([ins_types_gender_stats, (overall_gender_stats)]).fillna("All Data")
+        gen_fig = px.bar(data_frame= gender_averages, y="insurance", x="claim_amount", color="gender", 
+                            barmode="group", title="Overall Average Male and Female Claim Value and Averages for Different Insurance Types",
+                            color_discrete_sequence=["lightcoral","blue"], width=1200, height=600,
+                            labels={"gender":"Gender", "insurance":"Insurance", "claim_amount":"Claim Amount"})\
+                                .update_layout(xaxis=dict(tickformat='$,.2f', title="Claim Amount"), yaxis=dict(title="Insurance"),
+                                            legend_title="Gender")
+        
+        st.plotly_chart(gen_fig)
+        
 
         # Age ---------------------------------
         st.subheader("2. Age:")
-        age_analysis = """
-Highest Median Claim Amount: The median total claim amount is highest for infants at \$164,752, 
-indicating costly medical care likely due to intensive care needs.
-Children (2-12 years) have a median claim amount of \$116,237, slightly higher than teenagers (\$115,797), 
-suggesting significant medical costs for these age groups.
-Adults have a median claim amount of \$14,644 higher than young adults, indicating increased medical costs with age, 
-possibly due to consistent medical management, lower incidence of high-cost accidents, or different insurance coverage.
-Senior Citizens (60+ ) have a median claim amount of \$70,213, the lowest among all age groups, 
-possibly due to consistent medical management, lower accident incidence, or tailored insurance policies.
+        
+        c1, c2 = st.columns([1.5,3])
 
-"""
+        with c1:
+            age_analysis = """<br><br>
+    The data contains claims for people aged 0-87 years old, with the middle 50\% of values being between 28-58.
+    Very young victims aged 0-5, as well as people in their prime earning years aged 35-55 have the highest average 
+    claim values. These values trend incrementally lower as the victim's age increases, the opposite relationship from what we observed in vehicle claims. 
+    The largest average and median (middle) claim amounts for these age groups is for victims aged 0-5 years old, \$229,200 and \$130,700 respectively. 
+    This indicates the high costs of treatment and recovery for infants.
+    Victims 60 years or older have comparatively smaller claims compared to all younger age groups. 
 
-        st.markdown(age_analysis)
+    """
 
-        # Line Plot of Median Claims by Age
-        # st.plotly_chart(plotly_age(data))
+            st.markdown(age_analysis,unsafe_allow_html=True)
 
-        st.plotly_chart(plotly_age_hist(data, color_discrete_sequence=["sienna"]))
+        with c2: 
+            # Line Plot of Median Claims by Age
+            # st.plotly_chart(plotly_age(data))
 
-        # Mean and Median Age Barplots
-        st.plotly_chart(plotly_age_bracket(data, template="seaborn"))
+            st.plotly_chart(plotly_age_hist(data, color_discrete_sequence=["sienna"]))
+
+            # Mean and Median Age Barplots
+            # st.plotly_chart(plotly_age_bracket(data, template="seaborn"))
 
         st.plotly_chart(plotly_age_line(data, "age_bracket", template="seaborn"))
 
         # ------------------------ MARIAM's CODE ----------------   ATTORNEYS  ------------------------
         st.subheader("3. Attorney Involvement:")
-        attorney_analysis = """
-Hiring a private attorney correlates with a substantially higher median total claim amount of \$113,823, 
-compared to \$46,444 for cases where no private attorney was involved.
-This indicates a potential 145\% increase in median claim amounts when a private attorney is engaged.
+
+        at1, at2 = st.columns([3,2])
+        with at2:
+            attorney_analysis = """<br><br>
+Hiring a private attorney results in receiving substantially higher claim amounts. Average claims with a lawyer involved
+receive \$193,718 compared to \$86,870 without a lawyer, representing an increase in value of 123\%.
+Median claims settled with the assistance of an attorney receive \$113,823
+compared to \$46,444 for cases where a private attorney was not involved.
+This reflects an even larger potential increase of 145\% for typical claim amounts when a private attorney is engaged.
 """
-        st.markdown(attorney_analysis)
-        st.plotly_chart(plotly_pie(data, "private_attorney", template="presentation"))
+            st.markdown(attorney_analysis, unsafe_allow_html=True)
+        with at1:
+            st.plotly_chart(plotly_pie(data, "private_attorney", template="presentation"))
+       
         # Attorney
         st.plotly_chart(plotly_mean_median_bar(data,"private_attorney", color_discrete_sequence=["mistyrose", "sienna"]))
 
         # MARITAL STATUS --------------------------
         st.subheader("4. Marital Status:")  # --------------- MARITAL STATUS
-        marital_analysis = """
-The median total claim amount is highest for divorced individuals at \$339,190, 
-indicating potentially higher settlements related to divorce proceedings.
-Single individuals exhibit a moderate median claim amount of \$102,312, 
-reflecting diverse financial circumstances and varying insurance coverage, 
-which is approximately 2\% higher than that of married individuals.
-Those with unknown marital status have the lowest median claim amount at \$47,931, 
-suggesting incomplete or undisclosed marital status data impacting claim outcomes.
+        mar1, mar2 = st.columns([2,3])
+        with mar1:
+            marital_analysis = """<br><br>
+The average claim amount is highest for divorced individuals at \$371,600.
+Single and married individuals exhibit very similar claim profiles to one another. 
+In this dataset, single victims receive only about \$2,000 more for claims on average compared to married victims.
+Widowed people receive the smallest claims of all explicitly labeled groups, possibly reflecting their advanced age and lack of dependents.
+Those with unknown marital status have a slightly higher average claim than widows, but
+they have by far the lowest median claim amount at \$47,931.
 """
-        st.markdown(marital_analysis)
-        st.plotly_chart(plotly_pie(data, "marital_status", template="presentation"))
+            st.markdown(marital_analysis, unsafe_allow_html=True)
+        with mar2:
+            st.plotly_chart(plotly_pie(data, "marital_status", template="presentation"))
+        
         # Marital Status
         st.plotly_chart(plotly_mean_median_bar(data, "marital_status", template="plotly_dark"))
+
+        st.plotly_chart(plotly_scatter_age(data, "marital_status"))
 
         # Severity
         # st.plotly_chart(plotly_mean_median_bar(data, "severity"))
@@ -821,22 +820,33 @@ suggesting incomplete or undisclosed marital status data impacting claim outcome
         # Severity Analysis
         # Mapping severity levels to categories
         st.subheader("5. Severity:")
-        severity_points = """
-                    - We will fill this later, i need inputs from dataset team <br>
+        sev1, sev2 = st.columns([2,3])
+        with sev1:    
+            severity_points = """<br><br>The severity of injury follows a logical progression. As the damage a victim 
+        suffers increases, the larger the average claim value becomes. Claims stemming from the death of
+        an individual surprisingly have lower average values than non-lethal claims. This indicates that
+        the costs associated with recovery, lost wages, and trauma are very substantial. Even though death
+        is a more severe outcome, it results in a one-time payment whereas severe injuries may require
+        compensation for extended treatment and recovery programs.
                     """
-        st.markdown(
-            f"""
-                <style>
-                .text-area-wrapper {{
-                    background-color: rgba(128, 128, 128, 0.3); /* Grey with 30% opacity */
-                    padding: 10px;
-                    border-radius: 5px;
-                }}
-                </style>
-                <div class="text-area-wrapper" ">{severity_points}</div>
-                """,
-            unsafe_allow_html=True
-        )
+        
+            st.markdown(severity_points, unsafe_allow_html=True)
+        # st.markdown(
+        #     f"""
+        #         <style>
+        #         .text-area-wrapper {{
+        #             background-color: rgba(128, 128, 128, 0.3); /* Grey with 30% opacity */
+        #             padding: 10px;
+        #             border-radius: 5px;
+        #         }}
+        #         </style>
+        #         <div class="text-area-wrapper">{severity_points}</div>
+        #         """,
+        #     unsafe_allow_html=True
+        # )
+        
+        with sev2:
+            st.plotly_chart(plotly_pie(data, "severity_category"))
 
         # Define the order of severity categories
         severity_order = ['Emotional Trauma', 'Low', 'Moderate', 'Moderately High',
@@ -869,15 +879,18 @@ suggesting incomplete or undisclosed marital status data impacting claim outcome
 
         #### MEDICAL SPECIALTY
         st.subheader("6. Medical Specialty:")
-        specialty_analysis = """
-Pediatrics, Dermatology, and Urological Surgery exhibit the highest median total claim amounts, 
+        med1, med2 = st.columns([4,2])
+        with med2:
+            specialty_analysis = """<br><br><br><br>
+Pediatrics, Dermatology, and Urological Surgery exhibit the highest average claim amounts, 
 indicating potentially higher costs and complexities in medical treatments within these specialities.
-Radiology, Anesthesiology, and Emergency Medicine have the lowest median total claim amounts, 
-reflecting comparatively lower costs associated with their respective medical practices.
+Opthamology, Radiology, and Anesthesiology have the lowest average claims, 
+reflecting comparatively lower costs associated with their respective medical incidents.
 """
-        st.markdown(specialty_analysis)
+            st.markdown(specialty_analysis, unsafe_allow_html=True)
         # Medical Specialty ### VERY IMPORTANT!!!!!!!!! ##############
-        st.plotly_chart(plotly_injury_bar(data, "specialty", template="seaborn"))
+        with med1:
+            st.plotly_chart(plotly_injury_bar(data, "specialty", template="seaborn"))
 # .update_layout(yaxis=dict(tickformat='$,.2f')
 
         # ---------------------------------- FILTERS -----------------------------------------------
