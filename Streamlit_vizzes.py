@@ -1102,6 +1102,11 @@ ranging from \$42,853 to \$48,323, likely indicating improved vehicle safety and
         st.subheader("5. State:")
 
         state_paragraph ="""
+        New York (NY) shows both the mean and median injury claims around \$7,043.33 and \$7,235.00 respectively,
+          indicating consistency in claim amounts. Virginia (VA) exhibits a higher average injury claim 
+          of \$12,222.00 compared to its median claim of \$9,380.00, suggesting greater variability in 
+          claim amounts within the state. Overall, across all 7 states present in this dataset, the average injury claim is \$9,397.27 
+with a median of $7,700.00, reflecting typical claim values in the dataset.
 """
         st.markdown(state_paragraph)
         st.plotly_chart(plotly_pie(data, "state", template="presentation"))
@@ -1112,32 +1117,97 @@ ranging from \$42,853 to \$48,323, likely indicating improved vehicle safety and
         
         # accident_type
         st.subheader("6. Accident Type:")
-        st.write("Any car collision seems to have similar compensation, whereas unattended vehicle claims are worth less...")
+        
+        accident_paragraph ="""
+        Claims involving moving vehicles (single or multi-vehicle) have similarly large claim values, 
+        whereas claims for unattended vehicles typically have for smaller values. This disparity can be explained by the absence of 
+        physical injuries for claims involving theft or damage to a parked car.  
+        Multi-vehicle and single-vehicle collisions result average roughly \$62,000 and \$63,500 respectively per claim.
+Parked car and vehicle theft incidents show notably lower average claim amounts at \$5,300 and \$5,500.
+
+"""
+        st.markdown(accident_paragraph)
+
         st.plotly_chart(plotly_pie(data, "accident_type", template="presentation"))
         st.plotly_chart(plotly_mean_median_bar(data, "accident_type", template="seaborn"))
 
         # collision_type
         st.subheader("7. Collision Type:")
+
+        collision_paragraph ="""Front collisions account for 24.4\% of all claims, with an average payout of \$64,777 and 
+        a median of \$63,950. This makes logical sense, as front-end collisions will imperil the safety of the driver, all other front-seat
+        occupants, as well as the vital components of the engine. Side and rear collisions receive incrementally smaller claim sizes, and as 
+previously described, unattended vehicle claims receive substantially less.
+"""
+        st.markdown(collision_paragraph)
+
         st.plotly_chart(plotly_pie(data, "collision_type", template="presentation"))
         st.plotly_chart(plotly_mean_median_bar(data, "collision_type"))
 
         # incident_severity
         st.subheader("8. Incident Severity:")
+
+        severity_paragraph ="""Major Damage incidents have the highest average claim amount at almost $64,000,
+Total Loss incidents follow closely with an average of $61,792. Total losses having lower claim amounts than major damage
+is due to saving costs on mechanical labor and parts. Often, insurance companies will prefer to "total out" a car rather
+than repair it if estimated repair costs are larger than the appraised value of a car. 
+Minor Damage claims average \$48,600, well below the previous 2 categories. Trivial Damage claims are significantly 
+smaller at \$5,300 on average. 
+"""
+        st.markdown(severity_paragraph)
         st.plotly_chart(plotly_pie(data, "incident_severity", template="presentation"))
         st.plotly_chart(plotly_mean_median_bar(data, "incident_severity", template="seaborn"))
 
         # bodily_injuries
         st.subheader("9. Number of Bodily Injuries:")
+
+        bodily_injuries_paragraph ="""This data has a balanced proportion of claims with 0, 1, and 2 bodily injuries.
+        Claims without bodily injuries have a median value of \$56,700, 
+        while those with one injury have a slightly lower median of \$54,000, and claims involving 
+        two injuries have the largest median value of \$57,935. Overall, after removing outliers, the median claim amount remains 
+        stable at \$56,520. This data underscores a clear correlation: as the severity of bodily injuries increases, 
+        so does the average amount claimed, highlighting the direct impact of injuries on financial 
+        compensation in insurance claims.
+"""
+        st.markdown(bodily_injuries_paragraph)
+
+        
         st.plotly_chart(plotly_pie(data, "bodily_injuries", template="presentation"))
         st.plotly_chart(plotly_mean_median_bar(data, "bodily_injuries", color_discrete_sequence=["chocolate", "gray"]))
 
         # authorities_contacted
         st.subheader("10. Authorities Contacted:")
+
+        authorities_paragraph ="""Ambulance: Incidents where an ambulance was contacted have an average 
+        claim amount of approximately \$60,357, with a median value of \$59,300.
+Fire Department: Cases involving the fire department show a mean claim amount of about \$61,439, 
+with a median of \$60,000. Other Authorities: When other authorities other-than ambulance and fire 
+are involved, the average claim amount increases to around \$65,156, and the median is \$64,080.
+Police: Incidents requiring police intervention have a lower mean claim amount of roughly \$44,193, 
+with a median of \$51,800. These figures indicate that incidents involving other authorities 
+tend to result in higher claim amounts compared to those involving just ambulance or fire services. 
+Despite a lower mean, incidents with police involvement still exhibit considerable variability in 
+claim amounts, reflecting different types and severities of incidents reported.
+
+"""
+        st.markdown(authorities_paragraph)
+
         st.plotly_chart(plotly_pie(data, "authorities_contacted", template="presentation"))
         st.plotly_chart(plotly_mean_median_bar(data, "authorities_contacted", template="plotly"))
 
         # police_report_available
         st.subheader("11. Police Report:")
+
+        police_report_paragraph ="""Incidents with a police report available had a mean claim amount of 
+        \$52,083, which is approximately 11.5\% higher than incidents without a report (\$46,738).
+The median claim amount for incidents with a police report was \$57,110, showing a difference of about 
+3\% lower compared to incidents without a report (\$55,500).
+ Cases where the availability of a police report was unknown showed a mean claim amount of 
+ \$52,171 and a median of \$58,050.
+
+"""
+        st.markdown(police_report_paragraph)
+
         st.plotly_chart(plotly_pie(data, "police_report_available", template="presentation"))
         st.plotly_chart(plotly_mean_median_bar(data, "police_report_available", color_discrete_sequence=["blue", "lightgrey"]))
 
