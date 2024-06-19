@@ -1072,11 +1072,14 @@ around \$10,000.
         # Treemap
         fig = px.treemap(data[["auto_make", "auto_model"]].value_counts(normalize=True).round(2).reset_index(), 
                          path=["auto_make", "auto_model"], values="proportion", title="Distribution of Makes and Models")
+        
         fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
         fig.update_traces(hovertemplate="Vehicle %{label}<br>Percentage of Records %{value:.1%}")
         st.plotly_chart(fig)
- 
+        
         st.plotly_chart(plotly_injury_bar(data, "auto_make"))
+        
+        st.plotly_chart(plotly_injury_bar(data,"auto_model"))
         
 
         # auto_year -> CURIOUS DATA, implies older cars are of a higher claim value
@@ -1090,15 +1093,17 @@ ranging from \$42,853 to \$48,323, likely indicating improved vehicle safety and
 
 """
         st.markdown(model_year_paragraph)
-        st.plotly_chart(plotly_mean_median_bar(data,"auto_year", template="presentation").update_layout(xaxis=dict(tickvals=np.arange(1995, 2016))))
+        st.plotly_chart(plotly_mean_median_bar(data,"auto_year", template="presentation")\
+                        .update_layout(xaxis=dict(tickvals=np.arange(1995, 2016))))
         st.plotly_chart(plotly_age_line(data, "auto_year", template="presentation"))
         
 
-        # # auto_model  -> probably not that important
-        # st.plotly_chart(plotly_mean_median_bar(data,"auto_model"))
-
         # States
         st.subheader("5. State:")
+
+        state_paragraph ="""
+"""
+        st.markdown(state_paragraph)
         st.plotly_chart(plotly_pie(data, "state", template="presentation"))
         st.plotly_chart(plotly_states(data))
         # st.plotly_chart(plotly_box_states(data)) # Removed to avoid over complication
