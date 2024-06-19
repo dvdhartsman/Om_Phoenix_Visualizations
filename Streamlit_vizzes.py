@@ -1025,8 +1025,9 @@ reflecting comparatively lower costs associated with their respective medical pr
         
         # Gender
         st.subheader("1. Gender:")
-        st.write('"Gender" refers to the policy holder (liable party) for this dataset')
-        gender_paragraph = """The analysis of total claim amounts by gender reveals that 
+        
+        gender_paragraph = """"Gender" refers to the policy holder (liable party) for this dataset. 
+        The analysis of total claim amounts by gender reveals that 
         female policyholders tend to pay slightly larger claims compared to male policyholders.
 The mean (average) claim amount for females is \$51,169.66, 
 which is 3.94\% higher than the male mean of \$49,229.80.
@@ -1038,6 +1039,7 @@ Both metrics indicate that, on average, female policyholders report similar but 
 """
         
         st.markdown(gender_paragraph)
+
         st.plotly_chart(plotly_gender(data))
         
         # age_bracket
@@ -1045,7 +1047,7 @@ Both metrics indicate that, on average, female policyholders report similar but 
 
         age_paragraph = """
 The ages in this dataset are confined to a fairly narrow range. 80\% of all claimants fall between
-28-51 years old. As age increases, so does the average claim amount, with policyholders aged 60-65 having 
+28-51 years old. As age increases, so does the average claim amount, with victims aged 60-65 having 
 the highest average claims at \$58,900. Overall, there is a discernible upward trend in claim amounts with increasing age, 
 underscoring a positive correlation between age and claim size. This likely indicates that older 
 drivers tend to own more expensive cars, leading to higher claim settlements.
@@ -1064,7 +1066,7 @@ drivers tend to own more expensive cars, leading to higher claim settlements.
 Nissan, Saab, and Subaru comprise the largest proportions of manufacturers in our data with 9\% each respectively.
 Claims involving Ford vehicles have the highest median claim amount of around \$63,500 followed closely by
 luxury brand BMW at \$62,480. The largest and smallest average claims for each manufacturer are separated by a range of 
-around \$10,000.
+around \$11,000 from the highest average, BMW at \$54,000 to the lowest average, Toyota, at \$43,000.
 
 """
         st.markdown(auto_paragraph)
@@ -1084,10 +1086,11 @@ around \$10,000.
 
         # auto_year -> CURIOUS DATA, implies older cars are of a higher claim value
         st.subheader("4. Model year:")
-        model_year_paragraph = """The analysis of auto year and claim amounts displayed trends that indicate
+        model_year_paragraph = """The analysis of auto year and claim amounts for this dataset indicate
           older model years tend to receive higher average and median claim amounts compared to newer models.
 For example, vehicles from the mid-to-late 1990s and early 2000s (e.g., 1995-2005) show higher average claim amounts, 
-ranging from \$47,134 to \$57,535. This suggests potentially higher repair costs or difficult-to-locate parts.
+ranging from \$47,134 to \$57,535. This suggests potentially higher repair costs or difficult-to-locate parts,
+and perhaps more adverse outcomes due to deteriorating safety features within the vehicle.
 In contrast, newer model years from 2010 onwards (e.g., 2010-2015) demonstrate lower average claim amounts,
 ranging from \$42,853 to \$48,323, likely indicating improved vehicle safety and durability standards.
 
@@ -1102,11 +1105,10 @@ ranging from \$42,853 to \$48,323, likely indicating improved vehicle safety and
         st.subheader("5. State:")
 
         state_paragraph ="""
-        New York (NY) shows both the mean and median injury claims around \$7,043.33 and \$7,235.00 respectively,
-          indicating consistency in claim amounts. Virginia (VA) exhibits a higher average injury claim 
-          of \$12,222.00 compared to its median claim of \$9,380.00, suggesting greater variability in 
-          claim amounts within the state. Overall, across all 7 states present in this dataset, the average injury claim is \$9,397.27 
-with a median of $7,700.00, reflecting typical claim values in the dataset.
+        New York (NY) makes up the largest proportion of claims in our data, and it also has the largest
+          mean and median claim values at roughly \$54,250.00 and \$58,675.00 respectively. With the exception of 
+          Ohio, all the states represented in our data are on the east coast. Ohio has the smallest average and median claims
+          of all the states present while also representing the fewest claims in the data.
 """
         st.markdown(state_paragraph)
         st.plotly_chart(plotly_pie(data, "state", template="presentation"))
@@ -1119,11 +1121,11 @@ with a median of $7,700.00, reflecting typical claim values in the dataset.
         st.subheader("6. Accident Type:")
         
         accident_paragraph ="""
-        Claims involving moving vehicles (single or multi-vehicle) have similarly large claim values, 
-        whereas claims for unattended vehicles typically have for smaller values. This disparity can be explained by the absence of 
-        physical injuries for claims involving theft or damage to a parked car.  
-        Multi-vehicle and single-vehicle collisions result average roughly \$62,000 and \$63,500 respectively per claim.
-Parked car and vehicle theft incidents show notably lower average claim amounts at \$5,300 and \$5,500.
+        Claims involving moving vehicles (single or multi-vehicle) have similarly sized claim values, 
+        whereas claims for unattended vehicles typically have much smaller claim values. This disparity can be explained by the absence of 
+        physical injuries for claims involving vehicle theft or damage to a parked car.  
+        Multi-vehicle and single-vehicle collisions average roughly \$62,000 and \$63,500 respectively per claim.
+Parked car and vehicle theft incidents have notably lower average claim amounts at \$5,300 and \$5,500.
 
 """
         st.markdown(accident_paragraph)
@@ -1135,8 +1137,8 @@ Parked car and vehicle theft incidents show notably lower average claim amounts 
         st.subheader("7. Collision Type:")
 
         collision_paragraph ="""Front collisions account for 24.4\% of all claims, with an average payout of \$64,777 and 
-        a median of \$63,950. This makes logical sense, as front-end collisions will imperil the safety of the driver, all other front-seat
-        occupants, as well as the vital components of the engine. Side and rear collisions receive incrementally smaller claim sizes, and as 
+        a median of \$63,950. This makes logical sense, as front-end collisions will endanger the driver, any other front-seat
+        occupants, and the components of the engine. Side and rear collisions receive incrementally smaller claim sizes, and as 
 previously described, unattended vehicle claims receive substantially less.
 """
         st.markdown(collision_paragraph)
@@ -1147,12 +1149,13 @@ previously described, unattended vehicle claims receive substantially less.
         # incident_severity
         st.subheader("8. Incident Severity:")
 
-        severity_paragraph ="""Major Damage incidents have the highest average claim amount at almost $64,000,
-Total Loss incidents follow closely with an average of $61,792. Total losses having lower claim amounts than major damage
-is due to saving costs on mechanical labor and parts. Often, insurance companies will prefer to "total out" a car rather
-than repair it if estimated repair costs are larger than the appraised value of a car. 
-Minor Damage claims average \$48,600, well below the previous 2 categories. Trivial Damage claims are significantly 
-smaller at \$5,300 on average. 
+        severity_paragraph ="""The two most frequent incident severities found in this data are minor damage, representing 42\% of all claims,
+        and total losses representing 32.4\% of all claims. Major Damage incidents have the highest average claim amount at almost \$64,000,
+Total losses follow closely behind with an average claim value of \$61,792. Total losses having lower claim amounts than major damage
+is most likely attributed to insurers wanting to save costs on mechanical labor and parts. Often, insurance companies will prefer to 
+"total out" a car rather than repair it if the estimated repair costs are larger than the appraised value of a car. 
+Minor Damage claims average \$48,600, well below the previous 2 categories. Trivial Damage claims receive significantly 
+smaller compensation at \$5,300 on average. 
 """
         st.markdown(severity_paragraph)
         st.plotly_chart(plotly_pie(data, "incident_severity", template="presentation"))
@@ -1163,11 +1166,8 @@ smaller at \$5,300 on average.
 
         bodily_injuries_paragraph ="""This data has a balanced proportion of claims with 0, 1, and 2 bodily injuries.
         Claims without bodily injuries have a median value of \$56,700, 
-        while those with one injury have a slightly lower median of \$54,000, and claims involving 
-        two injuries have the largest median value of \$57,935. Overall, after removing outliers, the median claim amount remains 
-        stable at \$56,520. This data underscores a clear correlation: as the severity of bodily injuries increases, 
-        so does the average amount claimed, highlighting the direct impact of injuries on financial 
-        compensation in insurance claims.
+        while those with one injury surprisingly have a slightly lower median value of \$54,000. Claims involving 
+        two injuries have the largest median value of \$57,935 as expected. 
 """
         st.markdown(bodily_injuries_paragraph)
 
@@ -1178,27 +1178,26 @@ smaller at \$5,300 on average.
         # authorities_contacted
         st.subheader("10. Authorities Contacted:")
 
-        authorities_paragraph ="""Ambulance: Incidents where an ambulance was contacted have an average 
-        claim amount of approximately \$60,357, with a median value of \$59,300.
-Fire Department: Cases involving the fire department show a mean claim amount of about \$61,439, 
-with a median of \$60,000. Other Authorities: When other authorities other-than ambulance and fire 
-are involved, the average claim amount increases to around \$65,156, and the median is \$64,080.
-Police: Incidents requiring police intervention have a lower mean claim amount of roughly \$44,193, 
-with a median of \$51,800. These figures indicate that incidents involving other authorities 
-tend to result in higher claim amounts compared to those involving just ambulance or fire services. 
-Despite a lower mean, incidents with police involvement still exhibit considerable variability in 
-claim amounts, reflecting different types and severities of incidents reported.
-
+        authorities_paragraph ="""There are 4 distinct categories of authorities listed in our data:
+        Fire, Ambulance, Police, and "Other". For the specifically named authorities, cases involving the fire department 
+        received the largest claims. They have an average claim amount of about \$61,439 and a median value of \$60,000. 
+        Next largest, incidents where an ambulance was contacted have an average claim amount of approximately 
+        \$60,357, with a median value of \$59,300. Third, incidents requiring police intervention have a lower mean claim amount of roughly \$44,193, 
+with a median of \$51,800.  "Other" authorities had the largest the average claim amount of around \$65,156 
+and a median value of \$64,080. While police do address issues that result in large claims, they seem to
+handle the overwhelming majority of small claim instances. Notice how only police handle claims with values
+less than \$18,000
 """
         st.markdown(authorities_paragraph)
 
         st.plotly_chart(plotly_pie(data, "authorities_contacted", template="presentation"))
         st.plotly_chart(plotly_mean_median_bar(data, "authorities_contacted", template="plotly"))
+        st.plotly_chart(plotly_scatter_age(data, "authorities_contacted"))
 
         # police_report_available
         st.subheader("11. Police Report:")
 
-        police_report_paragraph ="""Incidents with a police report available had a mean claim amount of 
+        police_report_paragraph ="""Incidents with a police report available had an average claim amount of 
         \$52,083, which is approximately 11.5\% higher than incidents without a report (\$46,738).
 The median claim amount for incidents with a police report was \$57,110, showing a difference of about 
 3\% lower compared to incidents without a report (\$55,500).
