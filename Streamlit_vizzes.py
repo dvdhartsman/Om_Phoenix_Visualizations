@@ -544,6 +544,7 @@ def plotly_age_line(data, group, **kwargs):
 
 
 def plotly_scatter_age(data, group=None):
+    
     fig = px.scatter(data, x="age", y="claim_amount", log_y=False, range_y=[0, data["claim_amount"].max()],
                      title="Claim Value vs Age (Zoom to Inspect, Click Legend to Activate/Deactivate Groups)",
                        color=group, symbol=group, 
@@ -554,6 +555,9 @@ def plotly_scatter_age(data, group=None):
                       legend_title=f"{leg_title}")
     fig.update_layout(scattermode="group", scattergap=.75)
     fig.update_layout(yaxis=dict(tickformat='$,.2f'))
+    
+    
+                                                
 
     return fig
 
@@ -589,10 +593,11 @@ def plotly_mean_median_bar(data, group, **kwargs): # KWARGS --------
 
 def plotly_filtered_claims(data, condition, **kwargs):
     fig = px.histogram(data_frame=data["claim_amount"], labels={"claim_amount":"Claim Value USD"}, 
-                       title=f"Claim Distribution by Value - {condition}", nbins=20, **kwargs)
+                       title=f"Number of Claims by Value - {condition}", nbins=20, **kwargs)
     fig.update_layout(legend_title="", xaxis={"title":"Claim Value"}, yaxis={"title":"Number of Claims"})
-    fig.update_traces(name="Claims", marker_line_color='black', marker_line_width=1.5)
-    fig.update_layout(xaxis=dict(tickformat='$,.2f'))
+    fig.update_traces(name="Claims", marker_line_color='black', marker_line_width=1.5,
+                      hovertemplate="Claim Value: %{x}<br> Number of Claims: %{y}")
+    fig.update_layout(xaxis=dict(tickformat='$,.2f'),showlegend=False)
     
     return fig
 
@@ -1215,7 +1220,7 @@ less than \$18,000
 """
         st.markdown(authorities_paragraph)
 
-        st.plotly_chart(plotly_pie(data, "authorities_contacted", template="presentation"))
+        st.plotly_chart(plotly_pie(data.dropna(subset="authorities_contacted"), "authorities_contacted", template="presentation"))
         st.plotly_chart(plotly_mean_median_bar(data, "authorities_contacted", template="plotly"))
         st.plotly_chart(plotly_scatter_age(data, "authorities_contacted"))
 
