@@ -127,8 +127,13 @@ def main():
              police_report_available_type_status, auto_make_type_status, auto_model_type_status,
              auto_year_type_status)
 
+    input_keys = ['age','policy_state','policy_csl','umbrella_limit','insured_sex','accident_type','collision_type','incident_severity','authorities_contacted','state',\
+                    'property_damage','bodily_injuries','police_report_available','auto_make','total_claim_amount','injury_claim']
+    input_data = [age, state, ]
+
     st.subheader("Generate a Prediction:")
     st.button("Predict Claim:")
+
 
 
 if __name__ == "__main__":
