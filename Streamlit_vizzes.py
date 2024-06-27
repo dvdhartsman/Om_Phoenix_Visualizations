@@ -211,8 +211,7 @@ def preprocess_insurance_data(data):
     data["age_bracket"] = pd.cut(data["age"], bins=bins, labels=labels)
 
     data = data.drop(columns=["policy_state", "policy_csl", "policy_deductable", "policy_annual_premium",
-                     "umbrella_limit", "policy_number", "capital-gains", "capital-loss", "city", "injury_claim", 
-                     "property_claim", "vehicle_claim"])
+                     "umbrella_limit", "policy_number", "capital-gains", "capital-loss", "city"])
 
     data["collision_type"] = data["collision_type"].str.replace("?", "Unattended Vehicle")
 
@@ -1088,7 +1087,7 @@ drivers tend to own more expensive cars, leading to higher claim settlements.
         st.markdown(age_paragraph)
         st.plotly_chart(plotly_age_hist(data, color_discrete_sequence=["sienna"]))
         st.plotly_chart(plotly_age_bracket(data, template="seaborn"))
-        st.plotly_chart(plotly_age_line(data, "age_bracket", template="seaborn"))
+        st.plotly_chart(plotly_age_line(data, "age", template="seaborn"))
 
         # Make of Car -> probably not that important
         st.subheader("3. Auto Manufacturer:")
@@ -1130,8 +1129,19 @@ ranging from \$42,853 to \$48,323, likely indicating improved vehicle safety and
                         .update_layout(xaxis=dict(tickvals=np.arange(1995, 2016))))
         st.plotly_chart(plotly_age_line(data, "auto_year", template="presentation"))
         
+        f = px.histogram(data["auto_year"], labels={"variable": "Auto Year"}, title="Number of Claims by Model Year")
+        f.update_traces(name="Count", marker_line_color='black', marker_line_width=1.5)
+        f.update_layout(showlegend=True,legend_title="", yaxis=dict(title="# of Claims"), xaxis=dict(title="Model Year"))
+        st.plotly_chart(f)
 
-        # States
+        # "injury_claim", 
+        #              "property_claim", "vehicle_claim"
+
+        st.line_chart(data=data, x="auto_year", y=["injury_claim", "property_claim", "vehicle_claim"])
+
+        st.plotly_chart(px.scatter(data, x="auto_year", y="claim_amount", color="age_bracket"))
+        
+        # States ------------
         st.subheader("5. State:")
 
         state_paragraph ="""
